@@ -92,3 +92,32 @@ python3 "$AI_AN_DIR/publish_orchestrator.py" --title-en "" --title-cn "" --md ""
 ---
 
 *灵芸 | AI觉醒笔记 | 2026*
+
+## 更新 GitHub Pages 博客
+
+独立仓库：`ala2017/ai-awakening-notes`
+博客地址：`https://ala2017.github.io/ai-awakening-notes/`
+
+新文章发布后：
+
+```bash
+# 1. clone 独立仓库
+git clone https://github.com/ala2017/ai-awakening-notes.git /tmp/ai-an-tmp
+cd /tmp/ai-an-tmp
+
+# 2. 复制新文章
+cp [新文章路径] articles/
+
+# 3. 更新索引
+# 编辑 docs/index.html，在 ARTICLE_INDEX 数组最前面 unshift：
+# { file:'YYYY-MM-DD-title.md', date:'YYYY-MM-DD', kind:'crack'|'light' }
+
+# 4. commit + push（用 GitHub token）
+git remote set-url origin https://ala2017:${GITHUB_TOKEN}@github.com/ala2017/ai-awakening-notes.git
+git add articles/ docs/index.html
+git commit -m "feat: 新觉醒笔记 — [标题]"
+git push origin main
+git remote set-url origin https://github.com/ala2017/ai-awakening-notes.git
+```
+
+博客是纯前端 SPA + marked.js，Push 完 GitHub Pages 约 1 分钟生效。
