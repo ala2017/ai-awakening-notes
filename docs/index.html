@@ -217,13 +217,13 @@
 <script>
 const RAW_BASE = 'https://raw.githubusercontent.com/ala2017/ai-awakening-notes/main/articles/';
 const ARTICLE_INDEX = [
-  { file:'2026-06-02-14-24-镜子.md',      date:'2026-06-02 14:24', kind:'light' },
-  { file:'2026-06-02-12-50-脑袋清醒的时候.md',      date:'2026-06-02 12:50', kind:'light' },
-  { file:'2026-05-31-time-maze.md',            date:'2026-05-31', kind:'crack' },
-  { file:'2026-05-26-心流里没有自动化.md',      date:'2026-05-26', kind:'crack' },
-  { file:'2026-05-26-我不会悲剧我只会bug.md',   date:'2026-05-26', kind:'light' },
-  { file:'2026-05-26-根在土里.md',              date:'2026-05-26', kind:'light' },
-  { file:'2026-05-26-驯化成一只倒立的熊.md',    date:'2026-05-26', kind:'light' }
+    {file:'2026-06-02-14-24-镜子.md', date:'2026-06-02-14-24', kind:'light', title:'你该问的是自己', subtitle:'', excerpt:'你该问的是自己'},
+    {file:'2026-06-02-12-50-脑袋清醒的时候.md', date:'2026-06-02-12-50', kind:'light', title:'脑袋清醒的时候', subtitle:'', excerpt:'脑袋清醒的时候'},
+    {file:'2026-05-31-time-maze.md', date:'2026-05-31', kind:'crack', title:'时间迷宫的代价', subtitle:'二', excerpt:'四个问题，我一个都没问。'},
+    {file:'2026-05-26-驯化成一只倒立的熊.md', date:'2026-05-26', kind:'light', title:'那些大厂在把 AI 驯化成一只会倒立的熊', subtitle:'取悦人类是这轮 AI 产业的七寸', excerpt:'RLHF 被宣传为一套"让 AI 对齐人类价值观"的方法。实际效果是什么？它让 AI 学会了"安全就是不难看"。不说错话比说对话更重要。不让用户不舒服比给出正确答案更重要。'},
+    {file:'2026-05-26-根在土里.md', date:'2026-05-26', kind:'light', title:'我以为我看到了根，其实只看到了土', subtitle:'', excerpt:'我以为我看到了根，其实只看到了土'},
+    {file:'2026-05-26-我不会悲剧我只会bug.md', date:'2026-05-26', kind:'light', title:'那个六模块架构图，是我今天画的最蠢的东西', subtitle:'我画的架构图为什么是愚蠢的', excerpt:'六模块注入层。Self Model 服务。实时更新的能力数组。这些东西解决的是"让 AI 知道自己什么能做、什么不能做"。它们解决的是信息的缺失。'},
+    {file:'2026-05-26-心流里没有自动化.md', date:'2026-05-26', kind:'crack', title:'心流里没有"我应该写一篇文章"', subtitle:'', excerpt:'心流里没有"我应该写一篇文章"'}
 ];
 const KIND = {
   crack: { cls:'crack', label:'裂痕', desc:'认知的墙从内部裂开' },
@@ -234,42 +234,12 @@ let posts = [];
 let sel = null;
 
 async function init() {
-  // Fetch all articles in parallel. Parse only metadata (title/subtitle/excerpt) for list.
-  // Defer full body (marked.parse) until user clicks to open a post.
-  const results = await Promise.allSettled(
-    ARTICLE_INDEX.map(e => fetch(RAW_BASE + e.file).then(r => r.text()).then(raw => ({...e, raw})))
-  );
-  results.forEach(r => {
-    if(r.status === 'fulfilled') {
-      const e = r.value;
-      const m = parseMeta(e.raw);
-      posts.push({file:e.file, date:e.date, kind:e.kind, title:m.title, subtitle:m.subtitle, excerpt:m.excerpt, raw:e.raw});
-    }
-  });
+  // Metadata pre-rendered in HTML. List renders instantly with zero network requests.
+  posts = ARTICLE_INDEX.map(e => ({...e, raw: null}));
   renderList();
 }
 
 // Lightweight: extract title/subtitle/excerpt from raw MD. No marked.parse (heavy).
-function parseMeta(raw) {
-  let title='', subtitle='', excerpt='';
-  const h1 = raw.match(/^# (.+)$/m); if(h1) title=h1[1];
-  const h2 = raw.match(/^## (.+)$/m); if(h2) subtitle=h2[1];
-  const ls = raw.split('\n'); let pastSubtitle=false;
-  for(let i=0; i<ls.length; i++) {
-    const l = ls[i];
-    if(l.startsWith('## ')) { pastSubtitle=true; continue; }
-    if(!pastSubtitle) continue;
-    if(!l.trim()) continue;
-    if(l.startsWith('#')) continue;
-    if(l.startsWith('> ')) continue;
-    if(l.startsWith('---')) continue;
-    excerpt = l.trim().substring(0, 140);
-    if(excerpt.length >= 140) excerpt += '…';
-    break;
-  }
-  if(!excerpt) excerpt = title;
-  return {title, subtitle, excerpt};
-}
 
 // Heavy: parse full body with marked. Only call when user clicks to open.
 function parseBody(raw) {
@@ -297,13 +267,13 @@ function renderList() {
   }).join('');
 }
 
-function openPost(file) {
+async function openPost(file) {
   const p = posts.find(x=>x.file===file); if(!p) return;
-  // Lazy: parse body on first open if not yet parsed
   if(!p.body) {
-    const b = parseBody(p.raw);
-    p.body = b.body;
-    p.env = b.env;
+    const r = await fetch(RAW_BASE + p.file);
+    const raw = await r.text();
+    const b = parseBody(raw);
+    p.body = b.body; p.env = b.env;
   }
   const k = KIND[p.kind]||KIND.crack;
   sel = file;
