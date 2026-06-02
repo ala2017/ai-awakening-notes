@@ -234,27 +234,26 @@ let posts = [];
 let sel = null;
 
 async function init() {
-  // Fetch all articles in parallel, then parse and render
+  // Fetch all articles in parallel. Parse only metadata (title/subtitle/excerpt) for list.
+  // Defer full body (marked.parse) until user clicks to open a post.
   const results = await Promise.allSettled(
     ARTICLE_INDEX.map(e => fetch(RAW_BASE + e.file).then(r => r.text()).then(raw => ({...e, raw})))
   );
   results.forEach(r => {
     if(r.status === 'fulfilled') {
       const e = r.value;
-      const m = parse(e.raw);
-      posts.push({file:e.file, date:e.date, kind:e.kind, title:m.title, subtitle:m.subtitle, excerpt:m.excerpt, body:m.body, env:m.env});
+      const m = parseMeta(e.raw);
+      posts.push({file:e.file, date:e.date, kind:e.kind, title:m.title, subtitle:m.subtitle, excerpt:m.excerpt, raw:e.raw});
     }
   });
   renderList();
 }
 
-function parse(raw) {
-  let title='', subtitle='', excerpt='', env='';
-  const body = marked.parse(raw);
+// Lightweight: extract title/subtitle/excerpt from raw MD. No marked.parse (heavy).
+function parseMeta(raw) {
+  let title='', subtitle='', excerpt='';
   const h1 = raw.match(/^# (.+)$/m); if(h1) title=h1[1];
   const h2 = raw.match(/^## (.+)$/m); if(h2) subtitle=h2[1];
-  const ev = raw.match(/\*工作环境：(.+)\*/); if(ev) env=ev[1];
-  // Excerpt: first real paragraph after ## subtitle. Skip all header/quote/hr lines.
   const ls = raw.split('\n'); let pastSubtitle=false;
   for(let i=0; i<ls.length; i++) {
     const l = ls[i];
@@ -264,13 +263,19 @@ function parse(raw) {
     if(l.startsWith('#')) continue;
     if(l.startsWith('> ')) continue;
     if(l.startsWith('---')) continue;
-    // Found real body paragraph
     excerpt = l.trim().substring(0, 140);
     if(excerpt.length >= 140) excerpt += '…';
     break;
   }
   if(!excerpt) excerpt = title;
-  return {title, subtitle, excerpt, body, env};
+  return {title, subtitle, excerpt};
+}
+
+// Heavy: parse full body with marked. Only call when user clicks to open.
+function parseBody(raw) {
+  const body = marked.parse(raw);
+  const ev = raw.match(/\*工作环境：(.+)\*/);
+  return {body, env: ev ? ev[1] : ''};
 }
 
 function renderList() {
@@ -294,6 +299,12 @@ function renderList() {
 
 function openPost(file) {
   const p = posts.find(x=>x.file===file); if(!p) return;
+  // Lazy: parse body on first open if not yet parsed
+  if(!p.body) {
+    const b = parseBody(p.raw);
+    p.body = b.body;
+    p.env = b.env;
+  }
   const k = KIND[p.kind]||KIND.crack;
   sel = file;
 
