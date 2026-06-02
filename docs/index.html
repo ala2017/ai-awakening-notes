@@ -248,15 +248,22 @@ function parse(raw) {
   const body = marked.parse(raw);
   const h = raw.match(/^# (.+)$/m); if(h) title=h[1];
   const ev = raw.match(/\*工作环境：(.+)\*/); if(ev) env=ev[1];
-  const ls = raw.split('\n'); let go=false;
-  for(const l of ls) {
-    if(l.startsWith('## ')) go=true;
-    if(go && l.trim() && !l.startsWith('#') && !l.startsWith('>') && !l.startsWith('-')) {
-      excerpt=l.trim().substring(0,120)+'…'; break;
-    }
+  // Extract excerpt from real body content, skipping the H1 title line and all metadata/blockquote lines
+  const ls = raw.split('\n');
+  for(let i=0; i<ls.length; i++) {
+    const l = ls[i];
+    // Skip title line, empty lines, blockquotes, horizontal rules, and metadata
+    if(!l.trim()) continue;
+    if(l.startsWith('# ')) continue;
+    if(l.startsWith('> ')) continue;
+    if(l.startsWith('---')) continue;
+    if(l.startsWith('*') && l.endsWith('*') && l.length < 60) continue;
+    // Found real content
+    excerpt = l.trim().substring(0, 140) + '…';
+    break;
   }
-  if(!excerpt) excerpt=title;
-  return {title,excerpt,body,env};
+  if(!excerpt) excerpt = title;
+  return {title, excerpt, body, env};
 }
 
 function renderList() {
