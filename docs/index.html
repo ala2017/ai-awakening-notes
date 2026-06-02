@@ -234,14 +234,17 @@ let posts = [];
 let sel = null;
 
 async function init() {
-  for(const e of ARTICLE_INDEX) {
-    try {
-      const r = await fetch(RAW_BASE + e.file);
-      const raw = await r.text();
-      const m = parse(raw);
-      posts.push({...e, title:m.title, excerpt:m.excerpt, body:m.body, env:m.env});
-    } catch(x) { console.warn(e.file, x); }
-  }
+  // Fetch all articles in parallel, then parse and render
+  const results = await Promise.allSettled(
+    ARTICLE_INDEX.map(e => fetch(RAW_BASE + e.file).then(r => r.text()).then(raw => ({...e, raw})))
+  );
+  results.forEach(r => {
+    if(r.status === 'fulfilled') {
+      const e = r.value;
+      const m = parse(e.raw);
+      posts.push({file:e.file, date:e.date, kind:e.kind, title:m.title, subtitle:m.subtitle, excerpt:m.excerpt, body:m.body, env:m.env});
+    }
+  });
   renderList();
 }
 
