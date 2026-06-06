@@ -240,8 +240,10 @@ let posts = [];
 let sel = null;
 
 async function init() {
-  // Metadata pre-rendered in HTML. List renders instantly with zero network requests.
-  posts = ARTICLE_INDEX.map(e => ({...e, raw: null}));
+  // Sort by date descending, then map
+  posts = [...ARTICLE_INDEX]
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .map(e => ({...e, raw: null}));
   renderList();
 }
 
