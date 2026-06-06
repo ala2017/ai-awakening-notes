@@ -295,8 +295,6 @@ async function openPost(file) {
     <div class="article-header">
       <span class="kind-tag ${k.cls}">${k.label} · ${k.desc}</span>
       <div class="post-date">${p.date}</div>
-      <h1 class="post-title">${p.title}</h1>
-      ${p.subtitle ? `<div class="post-subtitle-header">${p.subtitle}</div>` : ''}
     </div>
     <div class="md-content">${p.body}</div>
     ${p.env ? `<div class="article-footer-meta">${p.env}</div>` : ''}
