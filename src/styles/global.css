@@ -66,7 +66,12 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* 中文标点挤压与悬挂——浏览器支持时生效，不支持时优雅退化 */
+  text-spacing-trim: space-first;
 }
+
+::selection { background: color-mix(in oklab, var(--light) 32%, transparent); }
+.prose > p:first-of-type, .prose h2, .prose blockquote { hanging-punctuation: first allow-end; }
 
 /* 跨页过渡：纯 CSS，不需要任何 JS 框架 */
 @view-transition { navigation: auto; }
@@ -82,6 +87,12 @@ img, svg, video, canvas, iframe { max-inline-size: 100%; block-size: auto; }
 table { max-inline-size: 100%; }
 
 .wrap { width: min(100% - 2.5rem, 62rem); margin-inline: auto; }
+
+/* 文章页：容器收到阅读尺度。
+   原来正文 34rem 塞在 62rem 的容器里，右边四成永远空着，所有内容挤在
+   左半边——那不是极简，是没决定过页面有多宽。收窄之后，留白变成对称的
+   页边距，读起来才是"一页"，而不是"半页加一块空地"。 */
+.wrap--read { width: min(100% - 2.2rem, 38rem); }
 
 /* ---------- 导航 ---------- */
 .nav {
@@ -160,21 +171,57 @@ table { max-inline-size: 100%; }
 /* ---------- 裂缝线：整个专栏的视觉签名 ----------
    裂痕 = 认知从内部裂开 → 线是断的
    光   = 从外部打进来   → 线是连的，且透出暖色 */
-.crackline { position: relative; padding-inline-start: 1.1rem; }
-.crackline::before {
-  content: ''; position: absolute; inset-block: 0.35rem; inset-inline-start: 0;
-  width: 1px;
+/* 裂缝线是正文的脊椎，不覆盖页头——页头是"进入之前"，线是你要走下去的那道缝。
+   两级：一层很淡的底纹给页面一个左边界，一层亮刻度标出每次思路断开的位置。
+   裂痕的线是断的，光的线是连的——同一个符号，两种形态。 */
+/* 文章整体：内容统一退到裂缝线右侧，线住在左边距里。
+   上一版把 padding 只加在 .prose 上，结果标题贴着线、正文退开 27px，
+   两者不在同一条轴——看起来像没对齐，而不是刻意错位。 */
+.art { position: relative; padding-inline-start: 2.1rem; }
+.art::before {
+  content: ''; position: absolute; inset-block: 0; inset-inline-start: 0; width: 1px;
 }
-.crackline.crack::before {
+.prose { position: relative; counter-reset: sec; }
+
+.art.crack::before {
   background: repeating-linear-gradient(180deg,
-    var(--crack) 0 0.42rem, transparent 0.42rem 0.95rem);
-  opacity: 0.75;
+    var(--crack) 0 0.42rem, transparent 0.42rem 1rem);
+  opacity: 0.42;
 }
-.crackline.light::before {
+.art.light::before {
   background: linear-gradient(180deg,
-    transparent 0%, var(--light) 18%, var(--light) 82%, transparent 100%);
-  box-shadow: 0 0 14px var(--light-glow);
+    transparent 0%, var(--light) 10%, var(--light) 90%, transparent 100%);
+  opacity: 0.5;
+  box-shadow: 0 0 12px var(--light-glow);
 }
+/* 裂痕那条在页头处淡入——线是"你要走下去的缝"，不是页面的边框 */
+.art.crack::before {
+  mask-image: linear-gradient(180deg, transparent 0 6rem, #000 14rem);
+}
+
+/* 章节：编号 + 线上的刻度。81 个章节标题原只有 1.22rem 加粗，与正文几乎同重，
+   读者看不出这是章节。现在给它编号、给它重量、并在裂缝线上留一道刻痕。 */
+.prose h2 {
+  counter-increment: sec;
+  position: relative;
+  font-size: 1.32rem; font-weight: 900; line-height: 1.5;
+  margin-block-start: 3.2em; color: var(--text);
+  text-wrap: balance;
+}
+.prose h2::before {
+  content: counter(sec, decimal-leading-zero);
+  display: block; margin-block-end: 0.55rem;
+  font-size: 0.68rem; font-weight: 400; letter-spacing: 0.16em;
+  font-variant-numeric: tabular-nums;
+}
+.prose h2::after {
+  content: ''; position: absolute; inset-inline-start: -2.1rem; inset-block-start: 0.5em;
+  inline-size: 0.75rem; block-size: 2px;
+}
+.art.crack .prose h2::before { color: var(--crack); }
+.art.crack .prose h2::after  { background: var(--crack); }
+.art.light .prose h2::before { color: var(--light); }
+.art.light .prose h2::after  { background: var(--light); box-shadow: 0 0 8px var(--light-glow); }
 /* 目录里的短线版 */
 .toc-kind {
   font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase;
@@ -189,7 +236,7 @@ table { max-inline-size: 100%; }
 .toc-kind.light i { background: var(--light); box-shadow: 0 0 8px var(--light-glow); }
 
 /* ---------- 文章页 ---------- */
-.article-head { padding-block: clamp(2.4rem, 2rem + 4vw, 4.5rem) 1.6rem; }
+.article-head { padding-block: clamp(2.6rem, 2rem + 4vw, 4.8rem) 1.9rem; }
 .article-head .kind-tag {
   display: inline-flex; align-items: center; gap: 0.5rem;
   font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase;
@@ -198,12 +245,14 @@ table { max-inline-size: 100%; }
 .article-head .kind-tag.crack { color: var(--crack); }
 .article-head .kind-tag.light { color: var(--light); }
 .article-head h1 {
-  font-size: var(--fs-title); font-weight: 900; line-height: 1.25;
-  letter-spacing: -0.012em; text-wrap: balance;
+  font-size: clamp(1.5rem, 1.15rem + 1.5vw, 2.35rem);
+  font-weight: 900; line-height: 1.32;
+  letter-spacing: -0.01em; text-wrap: balance;
 }
 .article-head .subtitle {
-  margin-block-start: 1rem; max-width: 32rem;
-  font-size: var(--fs-sub); color: var(--text-dim); line-height: 1.85; text-wrap: pretty;
+  margin-block-start: 1.05rem;
+  font-size: var(--fs-sub); color: var(--text-dim);
+  line-height: 1.9; text-wrap: pretty;
 }
 .article-head .stamp {
   margin-block-start: 1.6rem; font-size: var(--fs-meta);
@@ -227,22 +276,26 @@ table { max-inline-size: 100%; }
   overflow-wrap: break-word;
 }
 .prose a { overflow-wrap: anywhere; }
-.prose > * + * { margin-block-start: 1.15em; }
+.prose > * + * { margin-block-start: 1.32em; }
 .prose p { text-wrap: pretty; }
-.prose h2 {
-  font-size: 1.22rem; font-weight: 900; line-height: 1.5;
-  margin-block-start: 2.6em; color: var(--text);
-  text-wrap: balance;
+/* 首段是入口：略大一号、略亮一点、与下文多留一点空。
+   全是同等重量段落的墙，读起来没有开始，也没有地方停。 */
+.prose > p:first-of-type {
+  font-size: 1.055em;
+  color: color-mix(in oklab, var(--text) 92%, var(--text-dim));
+  margin-block-end: 1.7em;
 }
 .prose h3 { font-size: 1.05rem; font-weight: 600; margin-block-start: 2em; color: var(--text-dim); }
 .prose strong { font-weight: 900; color: var(--text); }
 .prose em { color: var(--text-dim); font-style: italic; }
 .prose blockquote {
-  border-inline-start: 1px solid var(--crack);
+  border-inline-start: 1px solid currentColor;
   padding-inline-start: 1.15rem;
   margin-inline-start: -1.15rem;
   color: var(--text-dim); font-style: italic; font-size: 0.97em;
 }
+.art.crack .prose blockquote { color: color-mix(in oklab, var(--crack) 55%, var(--text-dim)); }
+.art.light .prose blockquote { color: color-mix(in oklab, var(--light) 45%, var(--text-dim)); }
 .prose hr { border: 0; border-block-start: 1px solid var(--line-dim); margin-block: 2.5em; }
 .prose ul, .prose ol { padding-inline-start: 1.5rem; }
 .prose li { margin-block: 0.4em; }
@@ -267,13 +320,36 @@ table { max-inline-size: 100%; }
 .prose a { color: var(--light); text-underline-offset: 3px; }
 
 .article-foot {
-  max-width: var(--reading); padding-block: 1.6rem 3.5rem;
-  border-block-start: 1px solid var(--line-dim);
-  font-size: var(--fs-meta); color: var(--text-faint); line-height: 2.1;
+  padding-block: 2.6rem 0.5rem;
+  font-size: var(--fs-meta); color: var(--text-dim); line-height: 2.1;
 }
-.article-foot .tool { display: block; }
+.article-foot::before {
+  content: ''; display: block; inline-size: 2.1rem; block-size: 2px;
+  margin-block-end: 1.5rem;
+}
+.art.crack .article-foot::before { background: var(--crack); opacity: .7; }
+.art.light .article-foot::before { background: var(--light); box-shadow: 0 0 8px var(--light-glow); }
+.article-foot .tool { display: block; color: var(--text-faint); }
 
-.back { padding-block-end: 4rem; }
+/* 上一篇 / 下一篇：让专栏读起来是连续的，而不是一篇篇孤岛 */
+.adjacent {
+  display: grid; gap: 0.9rem; margin-block: 2.4rem 0;
+  padding-block-start: 1.8rem; padding-inline-start: 2.1rem;
+  border-block-start: 1px solid var(--line-dim);
+}
+.adjacent a {
+  text-decoration: none; font-size: 0.92rem; line-height: 1.7;
+  color: var(--text-dim); transition: color 0.22s var(--ease);
+  display: block; text-wrap: pretty;
+}
+.adjacent a:hover { color: var(--light); }
+.adjacent .label {
+  display: block; font-size: 0.68rem; letter-spacing: 0.14em;
+  color: var(--text-faint); margin-block-end: 0.3rem;
+}
+.adjacent .next { text-align: end; }
+
+.back { padding-block-end: 4rem; padding-inline-start: 2.1rem; }
 .back a { font-size: var(--fs-meta); color: var(--text-dim); text-decoration: none; letter-spacing: 0.04em; }
 .back a:hover { color: var(--light); }
 
@@ -288,6 +364,11 @@ table { max-inline-size: 100%; }
   .toc-item { grid-template-columns: 1fr; gap: 0.5rem; }
   .toc-left { flex-direction: row; align-items: center; gap: 0.9rem; padding-block-start: 0; }
   .prose blockquote { margin-inline-start: 0; }
+  /* 窄屏没有余量放裂缝线，收掉左边距，让正文占满 */
+  .art { padding-inline-start: 1.1rem; }
+  .adjacent, .back { padding-inline-start: 1.1rem; }
+  .prose h2::after { inset-inline-start: -1.1rem; inline-size: 0.5rem; }
+  .wrap--read { width: min(100% - 1.6rem, 38rem); }
 }
 
 @media (prefers-reduced-motion: reduce) {

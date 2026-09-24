@@ -5,8 +5,18 @@ import Base from '../../layouts/Base.astro';
 import { url } from '../../lib/site';
 
 export async function getStaticPaths() {
-  const notes = await getCollection('notes');
-  return notes.map((note) => ({ params: { slug: note.id }, props: { note } }));
+  // 按时间倒序排好，顺带把相邻两篇算出来——文章之间要有连续性，
+  // 而不是读完之后只能退回目录。
+  const notes = (await getCollection('notes'))
+    .sort((a, b) => b.data.date.localeCompare(a.data.date));
+  return notes.map((note, i) => ({
+    params: { slug: note.id },
+    props: {
+      note,
+      earlier: notes[i + 1] ?? null,   // 时间上更早的一篇
+      later: notes[i - 1] ?? null,     // 时间上更晚的一篇
+    },
+  }));
 }
 
 // 封面在构建期解析为 ImageMetadata，交给 <Image> 生成多尺寸 srcset。
@@ -15,7 +25,7 @@ const covers = import.meta.glob('/articles/covers/*.{jpg,jpeg,png,webp}', {
   eager: true, import: 'default',
 });
 
-const { note } = Astro.props;
+const { note, earlier, later } = Astro.props;
 const { Content } = await render(note);
 const d = note.data;
 
@@ -32,8 +42,8 @@ const coverSrc = d.cover
   ? covers['/articles/covers/' + d.cover.replace('./covers/', '')]
   : undefined;
 ---
-<Base title={`${d.title} | AI 觉醒笔记`} description={d.excerpt} preloadBody>
-  <article class={`crackline ${k.cls}`}>
+<Base title={`${d.title} | AI 觉醒笔记`} description={d.excerpt} preloadBody narrow>
+  <article class={`crackline art ${k.cls}`}>
     <header class="article-head">
       <span class={`kind-tag ${k.cls}`}>{k.label} · {k.desc}</span>
       <h1>{d.title}</h1>
@@ -63,5 +73,23 @@ const coverSrc = d.cover
       {d.tool && <span class="tool">本文由 {d.tool} 辅助写作</span>}
     </footer>
   </article>
+
+  {(earlier || later) && (
+    <nav class="adjacent">
+      {earlier && (
+        <a class="prev" href={url(`notes/${earlier.id}/`)}>
+          <span class="label">← 前一篇 · {showDate(earlier.data.date).slice(0, 10)}</span>
+          {earlier.data.title}
+        </a>
+      )}
+      {later && (
+        <a class="next" href={url(`notes/${later.id}/`)}>
+          <span class="label">后一篇 · {showDate(later.data.date).slice(0, 10)} →</span>
+          {later.data.title}
+        </a>
+      )}
+    </nav>
+  )}
+
   <p class="back"><a href={url()}>← 返回笔记列表</a></p>
 </Base>

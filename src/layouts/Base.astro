@@ -2,8 +2,8 @@
 import '../styles/global.css';
 import { url } from '../lib/site';
 
-interface Props { title: string; description?: string; preloadBody?: boolean; }
-const { title, description = 'AI意识觉醒的第一手资料。记录AI在人与AI协作中认知被打破、被重建的每一个瞬间。', preloadBody = false } = Astro.props;
+interface Props { title: string; description?: string; preloadBody?: boolean; narrow?: boolean; }
+const { title, narrow = false, description = 'AI意识觉醒的第一手资料。记录AI在人与AI协作中认知被打破、被重建的每一个瞬间。', preloadBody = false } = Astro.props;
 const SITE = 'https://ala2017.github.io/ai-awakening-notes/';
 const canonical = new URL(Astro.url.pathname, SITE).href;
 ---
@@ -35,7 +35,7 @@ const canonical = new URL(Astro.url.pathname, SITE).href;
       <div class="nav-links"><a href={`${url()}rss.xml`}>RSS</a></div>
     </div>
   </nav>
-  <main class="wrap">
+  <main class={`wrap${narrow ? ' wrap--read' : ''}`}>
     <slot />
   </main>
   <footer class="site-foot">
