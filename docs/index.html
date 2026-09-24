@@ -213,7 +213,7 @@
   </div>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/marked@11/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@11/marked.min.js" defer></script>
 <script>
 const RAW_BASE = 'https://raw.githubusercontent.com/ala2017/ai-awakening-notes/main/articles/';
 const ARTICLE_INDEX = [
@@ -330,7 +330,13 @@ document.addEventListener('DOMContentLoaded', function() {
     console.error('post-list container not found');
     return;
   }
+  document.addEventListener('DOMContentLoaded', function() {
+  if (!document.getElementById('post-list')) {
+    console.error('post-list container not found');
+    return;
+  }
   init();
+});
 });
 </script>
 </body>
