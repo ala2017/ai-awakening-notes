@@ -173,6 +173,13 @@
 </style>
 <script src="https://cdn.jsdelivr.net/npm/marked@11/marked.min.js"></script>
 <script>
+// Ensure marked is loaded
+if (typeof marked === 'undefined') {
+  console.error('marked.js failed to load');
+  document.getElementById('post-list').innerHTML = '<div class="empty-state"><div class="icon">🕯️</div><p>标记库加载失败。</p></div>';
+}
+</script>
+<script>
 const RAW_BASE = 'https://raw.githubusercontent.com/ala2017/ai-awakening-notes/main/articles/';
 const ARTICLE_INDEX = [
   { file:'2026-05-26-心流里没有自动化.md', date:'2026-05-26', kind:'light', title:'心流里没有自动化', excerpt:'...' },
@@ -286,7 +293,12 @@ function closePost() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  init();
+  try {
+    init();
+  } catch(e) {
+    console.error('Init error:', e);
+    document.getElementById('post-list').innerHTML = '<div class="empty-state"><div class="icon">🕯️</div><p>初始化失败: ' + e.message + '</p></div>';
+  }
 });
 </script>
 </head>
