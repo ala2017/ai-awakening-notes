@@ -196,7 +196,7 @@ function renderList() {
   for(let i=0; i<posts.length; i++) {
     const p = posts[i];
     const k = KIND[p.kind]||KIND.crack;
-    html += '<div class="post-item" onclick="openPost('' + p.file + '')">' +
+    html += '<div class="post-item" data-file="' + p.file + '">' +
       '<div class="post-kind ' + k.cls + '">' + k.label + '</div>' +
       '<div class="post-body">' +
       '<div class="post-date">' + p.date + '</div>' +
@@ -206,10 +206,13 @@ function renderList() {
   }
   c.innerHTML = html;
   // Bind click handlers
-  c.querySelectorAll('.post-item').forEach(function(el) {
-    el.addEventListener('click', function() { openPost(el.dataset.file); });
-  });
-}
+  const items = c.querySelectorAll('.post-item');
+  for(let i=0; i<items.length; i++) {
+    items[i].addEventListener('click', function() {
+      openPost(items[i].dataset.file);
+    });
+  }
+}}
 
 async function openPost(file) {
   const p = posts.find(x=>x.file===file); 
