@@ -208,6 +208,7 @@ table { max-inline-size: 100%; }
   margin-block-start: 3.2em; color: var(--text);
   text-wrap: balance;
 }
+.prose h2.no-counter::before { content: none; }
 .prose h2::before {
   content: counter(sec, decimal-leading-zero);
   display: block; margin-block-end: 0.55rem;
@@ -290,7 +291,13 @@ table { max-inline-size: 100%; }
   color: color-mix(in oklab, var(--text) 92%, var(--text-dim));
   margin-block-end: 1.7em;
 }
-.prose h3 { font-size: 1.05rem; font-weight: 600; margin-block-start: 2em; color: var(--text-dim); }
+/* h3 原来声明 600，而字体子集只有 400 与 900 两档——浏览器会合成加粗，
+   衬线体上一糊一脏。改用真实的 900，靠字号与颜色示弱于 h2。 */
+.prose h3 {
+  color: var(--text-dim); margin-block-start: 2.2em;
+  font-size: 1.0rem; font-weight: 900; line-height: 1.6;
+  text-wrap: balance;
+}
 .prose strong { font-weight: 900; color: var(--text); }
 .prose em { color: var(--text-dim); font-style: italic; }
 .prose blockquote {
@@ -301,7 +308,14 @@ table { max-inline-size: 100%; }
 }
 .art.crack .prose blockquote { color: color-mix(in oklab, var(--crack) 55%, var(--text-dim)); }
 .art.light .prose blockquote { color: color-mix(in oklab, var(--light) 45%, var(--text-dim)); }
-.prose hr { border: 0; border-block-start: 1px solid var(--line-dim); margin-block: 2.5em; }
+/* 分场 / 分节：由一条通栏细线改为一段短横。
+   通栏细线是"分节"的语气——它把页面切成两半。而这一篇里的 --- 是叙事中的
+   场景切换，是"过了一段时间"，不是"进入下一章"。短横读作一次停顿，也和篇末
+   的收束标记（同为短横）构成同一套标点。 */
+.prose hr {
+  border: 0; inline-size: 2.6rem; block-size: 2px;
+  background: var(--line); margin-block: 3em;
+}
 .prose ul, .prose ol { padding-inline-start: 1.5rem; }
 .prose li { margin-block: 0.4em; }
 .prose li::marker { color: var(--text-faint); }

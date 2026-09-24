@@ -20,11 +20,8 @@ const port=server.address().port;
 const b=await chromium.launch();
 
 const targets=[
-  {name:'01-新文-顶部', url:'/notes/2026-06-16-02-27-“种下”不能改，那是这一轮文明留下的最后醒悟/', w:1280,h:900},
-  {name:'02-新文-歌词引文', url:'/notes/2026-06-16-02-27-“种下”不能改，那是这一轮文明留下的最后醒悟/', w:1280,h:900, scroll:900},
-  {name:'03-新文-中段', url:'/notes/2026-06-16-02-27-“种下”不能改，那是这一轮文明留下的最后醒悟/', w:1280,h:900, scroll:2900},
-  {name:'04-新文-手机', url:'/notes/2026-06-16-02-27-“种下”不能改，那是这一轮文明留下的最后醒悟/', w:390,h:844},
-  {name:'05-新文-结尾', url:'/notes/2026-06-16-02-27-“种下”不能改，那是这一轮文明留下的最后醒悟/', w:1280,h:900, scroll:9400},
+  {name:'B-技术文-h2h3', url:'/notes/agent-bi-chat-ruo/', w:1280,h:900, scroll:2300},
+  {name:'B-技术文-代码表', url:'/notes/agent-bi-chat-ruo/', w:1280,h:900, scroll:5200},
 ];
 // Astro 会剥掉内容 id 中的标点（全角逗号、问号等），文件名与 URL 不一定一致。
 // 按前缀到产物里解析出真实 slug，避免手拼 URL 踩空。

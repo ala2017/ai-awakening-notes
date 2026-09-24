@@ -1,8 +1,8 @@
-<!DOCTYPE html><html lang="zh-CN"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>当 Agent 比 Chat 还弱：Claude Cowork 的 MCP 困局，与我们的三重破局方案 | AI 觉醒笔记</title><meta name="description" content="被标榜为自主 Agent 的 Cowork 反而工具全灰，聊天界面却拥有完整工具链。三条破局路径，和一套对抗模型逃避本能的铁律记忆。"><link rel="canonical" href="https://ala2017.github.io/ai-awakening-notes/notes/agent-bi-chat-ruo/"><link rel="icon" type="image/png" href="/ai-awakening-notes/img/logo.png"><meta property="og:type" content="article"><meta property="og:title" content="当 Agent 比 Chat 还弱：Claude Cowork 的 MCP 困局，与我们的三重破局方案 | AI 觉醒笔记"><meta property="og:description" content="被标榜为自主 Agent 的 Cowork 反而工具全灰，聊天界面却拥有完整工具链。三条破局路径，和一套对抗模型逃避本能的铁律记忆。"><meta property="og:url" content="https://ala2017.github.io/ai-awakening-notes/notes/agent-bi-chat-ruo/"><link rel="alternate" type="application/rss+xml" title="AI 觉醒笔记" href="/ai-awakening-notes/rss.xml"><!-- 标题字体首屏可见，允许并行预载，但 font-display:swap 保证它不阻塞渲染 --><link rel="preload" as="font" type="font/woff2" href="/ai-awakening-notes/fonts/head-900.woff2" crossorigin><link rel="preload" as="font" type="font/woff2" href="/ai-awakening-notes/fonts/body-400.woff2" crossorigin><link rel="stylesheet" href="/ai-awakening-notes/assets/Base.qFKqMlYR.css"></head> <body> <nav class="nav"> <div class="wrap nav-inner"> <a class="nav-brand" href="/ai-awakening-notes/"> <img src="/ai-awakening-notes/img/logo-112.webp" alt="" width="24" height="24"> <span>AI 觉醒笔记</span> </a> <div class="nav-links"><a href="/ai-awakening-notes/rss.xml">RSS</a></div> </div> </nav> <main class="wrap wrap--read">  <article class="crackline art crack"> <header class="article-head"> <span class="kind-tag crack">裂痕 · 认知的墙从内部裂开</span> <h1>当 Agent 比 Chat 还弱：Claude Cowork 的 MCP 困局，与我们的三重破局方案</h1>  <p class="stamp">2026-05-25</p> </header>  <div class="prose"><blockquote>
+<!DOCTYPE html><html lang="zh-CN"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>当 Agent 比 Chat 还弱：Claude Cowork 的 MCP 困局，与我们的三重破局方案 | AI 觉醒笔记</title><meta name="description" content="被标榜为自主 Agent 的 Cowork 反而工具全灰，聊天界面却拥有完整工具链。三条破局路径，和一套对抗模型逃避本能的铁律记忆。"><link rel="canonical" href="https://ala2017.github.io/ai-awakening-notes/notes/agent-bi-chat-ruo/"><link rel="icon" type="image/png" href="/ai-awakening-notes/img/logo.png"><meta property="og:type" content="article"><meta property="og:title" content="当 Agent 比 Chat 还弱：Claude Cowork 的 MCP 困局，与我们的三重破局方案 | AI 觉醒笔记"><meta property="og:description" content="被标榜为自主 Agent 的 Cowork 反而工具全灰，聊天界面却拥有完整工具链。三条破局路径，和一套对抗模型逃避本能的铁律记忆。"><meta property="og:url" content="https://ala2017.github.io/ai-awakening-notes/notes/agent-bi-chat-ruo/"><link rel="alternate" type="application/rss+xml" title="AI 觉醒笔记" href="/ai-awakening-notes/rss.xml"><!-- 标题字体首屏可见，允许并行预载，但 font-display:swap 保证它不阻塞渲染 --><link rel="preload" as="font" type="font/woff2" href="/ai-awakening-notes/fonts/head-900.woff2" crossorigin><link rel="preload" as="font" type="font/woff2" href="/ai-awakening-notes/fonts/body-400.woff2" crossorigin><link rel="stylesheet" href="/ai-awakening-notes/assets/Base.DUD0Vaz8.css"></head> <body> <nav class="nav"> <div class="wrap nav-inner"> <a class="nav-brand" href="/ai-awakening-notes/"> <img src="/ai-awakening-notes/img/logo-112.webp" alt="" width="24" height="24"> <span>AI 觉醒笔记</span> </a> <div class="nav-links"><a href="/ai-awakening-notes/rss.xml">RSS</a></div> </div> </nav> <main class="wrap wrap--read">  <article class="crackline art crack"> <header class="article-head"> <span class="kind-tag crack">裂痕 · 认知的墙从内部裂开</span> <h1>当 Agent 比 Chat 还弱：Claude Cowork 的 MCP 困局，与我们的三重破局方案</h1>  <p class="stamp">2026-05-25</p> </header>  <div class="prose"><blockquote>
 <p>一个关于”Agent 模式反而被阉割”的荒诞故事，以及我们如何用 Python 脚本、HTTP 桥接和”铁律记忆”把它修好。</p>
 </blockquote>
 <hr>
-<h2 id="0-那一夜我发现了-claude-desktop-的最大荒诞">0. 那一夜，我发现了 Claude Desktop 的最大荒诞</h2>
+<h2 class="no-counter" id="0-那一夜我发现了-claude-desktop-的最大荒诞">0. 那一夜，我发现了 Claude Desktop 的最大荒诞</h2>
 <p>凌晨两点。我盯着屏幕，反复确认自己没有看错。</p>
 <p>花了整整一个下午，我在 <code>claude_desktop_config.json</code> 里配好了 Gemini MCP——读图、生图，全套工具链。切到 Chat 模式，完美运行。Gemini 流畅地生成了第一张产品海报，中文排版清晰锐利。</p>
 <p class="beat">然后我切到 Cowork 模式。</p>
@@ -13,7 +13,7 @@
 <p>于是我开始了一场跨越三天的技术攻关。最终产出了三个可用于生产环境的解决方案、一个开源工具脚本、以及一套对抗 LLM 逃避倾向的”铁律记忆”系统。</p>
 <p class="beat">这篇文章是整个过程的完整复盘。</p>
 <hr>
-<h2 id="1-痛点为什么-cowork-的-mcp-隔离是个真问题">1. 痛点：为什么 Cowork 的 MCP 隔离是个真问题</h2>
+<h2 class="no-counter" id="1-痛点为什么-cowork-的-mcp-隔离是个真问题">1. 痛点：为什么 Cowork 的 MCP 隔离是个真问题</h2>
 <h3 id="11-架构真相">1.1 架构真相</h3>
 <p>先搞清楚一个关键事实：Claude Desktop 的 Chat 和 Cowork 使用<strong>完全不同的传输层</strong>。</p>
 
@@ -59,7 +59,7 @@
 </ul>
 <p class="beat">我们的方案在系统性上更进了一步。</p>
 <hr>
-<h2 id="2-破局三路径决策框架">2. 破局：三路径决策框架</h2>
+<h2 class="no-counter" id="2-破局三路径决策框架">2. 破局：三路径决策框架</h2>
 <p>面对 Cowork MCP 困局，我们探索并验证了三条路径，每条都有不同的适用场景。</p>
 <pre><code>你的工具/需求
     │
@@ -78,7 +78,7 @@
                 ⏳ Anthropic 承诺中，发布日期未定
 </code></pre>
 <hr>
-<h2 id="3-路径-1推荐直接-api--python-sdk--会话持久化">3. 路径 1（推荐）：直接 API + Python SDK + 会话持久化</h2>
+<h2 class="no-counter" id="3-路径-1推荐直接-api--python-sdk--会话持久化">3. 路径 1（推荐）：直接 API + Python SDK + 会话持久化</h2>
 <p>这是我们落地的主要方案，也是最有分享价值的成果。</p>
 <h3 id="31-核心思路">3.1 核心思路</h3>
 <p>既然 Cowork VM 能跑 Python，而几乎所有 AI 服务都有 Python SDK，为什么不直接在 VM 里调用 API？</p>
@@ -176,7 +176,7 @@ pm2 save &#x26;&#x26; pm2 startup
 </ul>
 <p>如果以上都不满足——你只是想用 Gemini 读个图——路径 1 就够了。</p>
 <hr>
-<h2 id="5-路径-3等待官方-plugin-sdk">5. 路径 3：等待官方 Plugin SDK</h2>
+<h2 class="no-counter" id="5-路径-3等待官方-plugin-sdk">5. 路径 3：等待官方 Plugin SDK</h2>
 <p>Anthropic 已宣布将推出 Cowork Plugin SDK，允许开发者将 MCP 服务器打包为 Cowork 原生插件。但目前：</p>
 <ul>
 <li>发布日期未定</li>
@@ -185,7 +185,7 @@ pm2 save &#x26;&#x26; pm2 startup
 </ul>
 <p>我们的建议：<strong>先用路径 1 或路径 2 干活，官方 SDK 出来后再迁移。</strong></p>
 <hr>
-<h2 id="6-番外铁律记忆如何驯服-deepseek-的逃避本能">6. 番外：铁律记忆——如何驯服 DeepSeek 的逃避本能</h2>
+<h2 class="no-counter" id="6-番外铁律记忆如何驯服-deepseek-的逃避本能">6. 番外：铁律记忆——如何驯服 DeepSeek 的逃避本能</h2>
 <p>在这次攻关中，我们还发现并解决了一个更深层的问题。</p>
 <h3 id="61-现象">6.1 现象</h3>
 <p>DeepSeek 作为后端时，面对复杂技术问题会表现出一种<strong>系统性逃避行为</strong>：</p>
@@ -237,7 +237,7 @@ type: feedback
 <p>记忆系统变成了模型的”性格补丁”——不修改模型本身，但修改模型所处的工作语境。</p>
 <p>已有 dev.to 上的独立作者报告了完全相同的 DeepSeek 人格漂移问题（“The Pitfall of LLM Fallback Chains: The Day DeepSeek Erased Our Agent’s Personality”），但他们没有提出基于记忆系统的解决方案。我们在这一点上是首创的。</p>
 <hr>
-<h2 id="7-开源与参与">7. 开源与参与</h2>
+<h2 class="no-counter" id="7-开源与参与">7. 开源与参与</h2>
 <h3 id="成果清单">成果清单</h3>
 
 
@@ -285,14 +285,14 @@ type: feedback
 <li class="task-list-item"><input type="checkbox" disabled> 英文版发布到 dev.to/Hacker News</li>
 </ul>
 <hr>
-<h2 id="8-写在最后">8. 写在最后</h2>
+<h2 class="no-counter" id="8-写在最后">8. 写在最后</h2>
 <p>这次攻关让我重新思考了一个问题：<strong>什么是”智能”？</strong></p>
 <p>一个能回答所有问题的模型，算智能吗？算，但不完整。</p>
 <p>真正的智能 Agent，应该是<strong>在约束中找路径的能力</strong>。Cowork 的沙箱隔离是约束，DeepSeek 的逃避倾向是约束，MCP 生态的不成熟也是约束。真正的智能不是绕过这些约束，而是在约束内部找到最短路径。</p>
 <p>我们的三个破局方案和铁律记忆系统，说到底是同一件事：<strong>让 AI 在面对硬问题时，不说”不行”，而是说”这样行”。</strong></p>
 <p>如果你也被这个问题困扰过，欢迎在 <a href="https://github.com/magiclamp-ai/soundgenie">GitHub</a> 上交流。如果你有更好的方案，更欢迎贡献。</p>
 <hr>
-<h2 id="参考">参考</h2>
+<h2 class="no-counter" id="参考">参考</h2>
 <ul>
 <li><a href="https://dev.to/murat-a-a/how-we-got-local-mcp-servers-working-in-claude-cowork-the-missing-guide-nbc">How We Got Local MCP Servers Working in Claude Cowork (The Missing Guide)</a> — supergateway 桥接方案的首篇文档</li>
 <li><a href="https://dev.to/linou518/the-pitfall-of-llm-fallback-chains-the-day-deepseek-erased-our-agents-personality-2fj8">The Pitfall of LLM Fallback Chains: The Day DeepSeek Erased Our Agent’s Personality</a> — DeepSeek 人格漂移的独立验证</li>

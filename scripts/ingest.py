@@ -73,6 +73,7 @@ def main():
     ap.add_argument('--kind', required=True, choices=['crack', 'light'])
     ap.add_argument('--excerpt', required=True)
     ap.add_argument('--place', default=None)
+    ap.add_argument('--slug', default=None, help='产物文件名（不含扩展名），默认取源文件名')
     ap.add_argument('--cover-name', default=None)
     ap.add_argument('--dry-run', action='store_true')
     a = ap.parse_args()
@@ -105,9 +106,10 @@ def main():
     # ---- 日期：文件名优先，与稿内自述交叉核对 ----
     stem = os.path.splitext(os.path.basename(src))[0]
     # 文件名形如 YYYY-MM-DD-HH-MM-标题 或 YYYY-MM-DD-标题；有时分就用，没有记 00:00
-    m = re.match(r'(\d{4})-(\d{2})-(\d{2})(?:-(\d{2})-(\d{2}))?', stem)
+    # 命名宽容：YYYY-MM-DD 或 YYYYMMDD 起头都收，有 HH-MM 就用它的时分
+    m = re.match(r'(\d{4})-?(\d{2})-?(\d{2})(?:[-_](\d{2})[-_](\d{2}))?', stem)
     if not m:
-        raise SystemExit('❌ 文件名必须以 YYYY-MM-DD 开头，当前：%s' % stem)
+        raise SystemExit('❌ 文件名必须以 YYYY-MM-DD 或 YYYYMMDD 起头，当前：%s' % stem)
     y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))
     fname_time = ('%s:%s' % (m.group(4), m.group(5))) if m.group(4) else '00:00'
     warnings = []
@@ -202,7 +204,8 @@ def main():
     else:
         cover_src = imgs[0] if imgs else None
 
-    slug = stem
+    # slug 可覆盖：源文件名常带内部编号（如 seed-002），进 URL 对读者无意义
+    slug = a.slug or stem
     cover_name = a.cover_name or (slug + '-cover' + (os.path.splitext(cover_src)[1].lower() if cover_src else ''))
     cover_rel = './covers/' + cover_name if cover_src else None
 

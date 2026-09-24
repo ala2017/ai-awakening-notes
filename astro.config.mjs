@@ -1,5 +1,5 @@
 import { defineConfig } from 'astro/config';
-import rehypeBeats from './src/lib/rehype-beats.mjs';
+import rehypeShape from './src/lib/rehype-shape.mjs';
 
 // AI 觉醒笔记 —— 构建期静态生成
 //
@@ -27,8 +27,8 @@ export default defineConfig({
 
   markdown: {
     syntaxHighlight: false,
-    // 给短段落打上 beat 标记，让文章的节拍在排版上显形（见该文件注释）
-    rehypePlugins: [[rehypeBeats, { absMax: 20, quantile: 0.25 }]],
+    // 内容整形：短段落打 beat 标记；小标题自带编号时关掉自动编号（见该文件注释）
+    rehypePlugins: [[rehypeShape, { absMax: 20, quantile: 0.25 }]],
   },
 
   compressHTML: true,

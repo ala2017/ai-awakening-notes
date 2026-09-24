@@ -6,4 +6,7 @@
 // 当时我以为是插件写错了，查了半天。构建总共 1 秒多，缓存省不下什么。
 import { rmSync } from 'node:fs';
 rmSync('.astro', { recursive: true, force: true });
-console.log('✓ 已清 .astro 缓存');
+rmSync('docs', { recursive: true, force: true });
+console.log('✓ 已清 .astro 缓存与 docs/ 产物');
+// docs/ 一并清掉。2026-09-25：怀疑"改而不生效"查了很久，最后发现是
+// 产物陈旧——旧文件还在，看起来像新逻辑没跑。清干净比省那点时间值得。
