@@ -8,12 +8,14 @@
     "dev": "astro dev",
     "build": "astro build && node scripts/postbuild.mjs",
     "preview": "astro preview",
-    "verify": "node scripts/verify.mjs",
-    "fonts": "python3 scripts/build-fonts.py"
+    "verify": "node scripts/verify.mjs && node scripts/check-layout.mjs",
+    "fonts": "python3 scripts/build-fonts.py",
+    "check:layout": "node scripts/check-layout.mjs"
   },
   "devDependencies": {
+    "@fontsource-variable/noto-serif-sc": "^5.3.0",
     "astro": "^7.3.5",
-    "sharp": "^0.34.0",
-    "@fontsource-variable/noto-serif-sc": "^5.3.0"
+    "playwright": "^1.63.0",
+    "sharp": "^0.34.0"
   }
 }

@@ -74,6 +74,13 @@ body {
 
 a { color: inherit; }
 
+/* 兜底：任何媒体、表格、代码块都不得撑破容器。
+   2026-09-25 事故：封面 img 是 <article> 的直接子元素，不在 .prose 内，
+   我写的 .prose img 规则没命中它，Astro 又给了 width="1376"，
+   结果它以原尺寸铺开，把视口撑破。凡是宽度可能超出的元素，一律在此兜底。 */
+img, svg, video, canvas, iframe { max-inline-size: 100%; block-size: auto; }
+table { max-inline-size: 100%; }
+
 .wrap { width: min(100% - 2.5rem, 62rem); margin-inline: auto; }
 
 /* ---------- 导航 ---------- */
@@ -204,7 +211,22 @@ a { color: inherit; }
   font-variant-numeric: tabular-nums;
 }
 
-.prose { max-width: var(--reading); padding-block-end: 3rem; }
+.cover {
+  display: block;
+  inline-size: 100%;
+  max-inline-size: var(--reading);
+  block-size: auto;
+  border-radius: 4px;
+  margin-block: 0 2.25rem;
+}
+
+.prose {
+  max-width: var(--reading);
+  padding-block-end: 3rem;
+  /* 长英文标识符与 URL 不得撑破栏目 */
+  overflow-wrap: break-word;
+}
+.prose a { overflow-wrap: anywhere; }
 .prose > * + * { margin-block-start: 1.15em; }
 .prose p { text-wrap: pretty; }
 .prose h2 {
@@ -236,7 +258,11 @@ a { color: inherit; }
 }
 .prose pre code { background: none; padding: 0; font-size: 0.82em; line-height: 1.7; }
 .prose img { display: block; inline-size: 100%; block-size: auto; border-radius: 4px; margin-block: 2em; }
-.prose table { inline-size: 100%; border-collapse: collapse; font-size: 0.9em; }
+.prose table {
+  display: block; inline-size: 100%; max-inline-size: 100%;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  border-collapse: collapse; font-size: 0.9em;
+}
 .prose th, .prose td { border-block-end: 1px solid var(--line-dim); padding: 0.5em 0.7em; text-align: start; }
 .prose a { color: var(--light); text-underline-offset: 3px; }
 
