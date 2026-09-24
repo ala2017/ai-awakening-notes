@@ -46,8 +46,19 @@ export default function rehypeBeats(options = {}) {
     const cut = Math.min(absMax, q);
     if (cut <= 0) return;
 
+    const tag = lens.map((n) => n > 0 && n <= cut);
+
+    // 补齐被夹在顿句之间的那一段。
+    // 例：《种下不能改》里的排比——不是保证他们会懂。／不是相信他们一定会
+    // 变得更好。／甚至不保证循环会停止。／只是留下。——第二句 14 字恰好卡在
+    // 阈值外，漏标之后四句一组的节奏断了一下。只要它不太长（不超过 cut×1.5）
+    // 就一并算顿句。这条规则只填空隙、不向外扩张，不会推高整体打标率。
+    for (let i = 1; i < ps.length - 1; i++) {
+      if (!tag[i] && tag[i - 1] && tag[i + 1] && lens[i] <= cut * 1.5) tag[i] = true;
+    }
+
     for (let i = 0; i < ps.length; i++) {
-      if (lens[i] === 0 || lens[i] > cut) continue;
+      if (!tag[i]) continue;
       const node = ps[i];
       node.properties = node.properties ?? {};
       const cur = node.properties.className;
