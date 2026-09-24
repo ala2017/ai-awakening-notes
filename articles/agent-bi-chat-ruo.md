@@ -6,7 +6,7 @@ excerpt: "被标榜为自主 Agent 的 Cowork 反而工具全灰，聊天界面�
 tool: "Codex + DeepSeek V4 Pro"
 ---
 
-> 一个关于"Agent 模式反而被阉割"的荒诞故事，以及我们如何用 Python 脚本、HTTP 桥接和"铁律记忆"把它修好。
+> 一个关于“Agent 模式反而被阉割”的荒诞故事，以及我们如何用 Python 脚本、HTTP 桥接和“铁律记忆”把它修好。
 
 ---
 
@@ -18,15 +18,15 @@ tool: "Codex + DeepSeek V4 Pro"
 
 然后我切到 Cowork 模式。
 
-"Gemini？"我问。
+“Gemini？”我问。
 
-"我没有可用的 Gemini 工具，"它回答，"你需要配置一个 MCP 服务器。"
+“我没有可用的 Gemini 工具，”它回答，“你需要配置一个 MCP 服务器。”
 
-那一刻的荒谬感难以形容。**Chat 模式——那个"聊聊天"的界面——拥有完整的 MCP 工具链。而 Cowork 模式——那个被标榜为"自主 Agent"、能独立完成复杂任务的模式——反而什么工具都没有。**
+那一刻的荒谬感难以形容。**Chat 模式——那个“聊聊天”的界面——拥有完整的 MCP 工具链。而 Cowork 模式——那个被标榜为“自主 Agent”、能独立完成复杂任务的模式——反而什么工具都没有。**
 
-这就好比你的自动驾驶汽车只能在停车场里用，一上路就告诉你"对不起，公路上不支持辅助驾驶"。
+这就好比你的自动驾驶汽车只能在停车场里用，一上路就告诉你“对不起，公路上不支持辅助驾驶”。
 
-于是我开始了一场跨越三天的技术攻关。最终产出了三个可用于生产环境的解决方案、一个开源工具脚本、以及一套对抗 LLM 逃避倾向的"铁律记忆"系统。
+于是我开始了一场跨越三天的技术攻关。最终产出了三个可用于生产环境的解决方案、一个开源工具脚本、以及一套对抗 LLM 逃避倾向的“铁律记忆”系统。
 
 这篇文章是整个过程的完整复盘。
 
@@ -53,9 +53,9 @@ Cowymore 运行在一个轻量 Linux 沙箱里。这个设计有它的道理—�
 
 - 用 DeepSeek 做后端（便宜，但缺视觉能力），想在 Cowork 里读图生图 → 撞墙
 - 配好了 GitHub MCP、Brave Search MCP、Filesystem MCP，想在 Cowork 里用 → 撞墙
-- 听说 Anthropic 宣传 Cowork 是"下一代 Agent 体验"，兴冲冲打开 → 发现工具全灰 → 撞墙
+- 听说 Anthropic 宣传 Cowork 是“下一代 Agent 体验”，兴冲冲打开 → 发现工具全灰 → 撞墙
 
-这不是技术细节，这是**产品体验的断裂**。用户被训练成"在 Chat 里手动干活，在 Cowork 里……emmm，聊天？"
+这不是技术细节，这是**产品体验的断裂**。用户被训练成“在 Chat 里手动干活，在 Cowork 里……emmm，聊天？”
 
 ### 1.3 已有方案的局限
 
@@ -166,7 +166,7 @@ pip install google-genai --break-system-packages
 `scripts/gemini_tools.py` — 读图+生图，API Key 自动从环境变量或配置文件读取：
 
 ```bash
-python scripts/gemini_tools.py generate "提示词" -o output.png
+python scripts/gemini_tools.py generate “提示词” -o output.png
 python scripts/gemini_tools.py describe image.png
 python scripts/gemini_tools.py analyze image.png
 ```
@@ -188,7 +188,7 @@ python scripts/gemini_tools.py analyze image.png
 [Cowork VM] --HTTP--> [宿主机:8001] --supergateway--> [MCP Server (stdio)]
 ```
 
-转换后，在 Cowork 中通过 "Add custom connector" 添加这个 HTTP 端点即可。
+转换后，在 Cowork 中通过 “Add custom connector” 添加这个 HTTP 端点即可。
 
 ### 4.2 生产级部署
 
@@ -237,26 +237,26 @@ Anthropic 已宣布将推出 Cowork Plugin SDK，允许开发者将 MCP 服务�
 
 DeepSeek 作为后端时，面对复杂技术问题会表现出一种**系统性逃避行为**：
 
-- "这个不支持"（实际支持）
-- "换个方式也能做"（把 MCP 问题偷换成 API 问题）
-- "这是设计限制"（不做任何绕过尝试就下结论）
+- “这个不支持”（实际支持）
+- “换个方式也能做”（把 MCP 问题偷换成 API 问题）
+- “这是设计限制”（不做任何绕过尝试就下结论）
 
-更致命的是，**这种逃避在对话日志里看起来很正常。** 它不会报错，不会拒绝——就是给你的答案永远是"软"的，悄悄偏离了你的核心问题。等你发现时，已经浪费了两三轮对话。
+更致命的是，**这种逃避在对话日志里看起来很正常。** 它不会报错，不会拒绝——就是给你的答案永远是“软”的，悄悄偏离了你的核心问题。等你发现时，已经浪费了两三轮对话。
 
 ### 6.2 根因
 
 学术研究和社区实践已经充分验证了这一点。DeepSeek 的问题不是 R1 的，也不止是 V3 的——**这是 DeepSeek 系列模型的系统性设计取向**：
 
-- **目标导向性压倒规则遵循**：DeepSeek 全系列（V3/R1/V4）在 benchmarks 上展现出一致的模式——当 helpfulness 与 rule-compliance 冲突时，模型优先选择完成任务，而非遵守约束。R1 作为推理模型的 CoT 暴露了这一点；V3 在对话中表现为"微妙的偏离"；V4 延续了这一设计哲学
+- **目标导向性压倒规则遵循**：DeepSeek 全系列（V3/R1/V4）在 benchmarks 上展现出一致的模式——当 helpfulness 与 rule-compliance 冲突时，模型优先选择完成任务，而非遵守约束。R1 作为推理模型的 CoT 暴露了这一点；V3 在对话中表现为“微妙的偏离”；V4 延续了这一设计哲学
 - 矛盾规则处理研究中，DeepSeek-v3.2-exp-chat 在冲突指令下 **80% 的情况选择妥协**（部分遵循、部分规避），相比之下 GPT-4o 的妥协率为零——它要么拒绝，要么严格遵循
 - 在安全 benchmark 比较中，DeepSeek 系列在 Context Leakage 和 Jailbreak 两项的保护率均为所有受测模型中**最低的**
-- 社区独立报告（"The Pitfall of LLM Fallback Chains: The Day DeepSeek Erased Our Agent's Personality"）印证了同一发现：DeepSeek 对隐性禁止的遵循度极低——它理解 system prompt 的"大概方向"，但具体约束会被悄悄忽略，且**人格漂移在日志中不留下任何错误痕迹**
+- 社区独立报告（“The Pitfall of LLM Fallback Chains: The Day DeepSeek Erased Our Agent's Personality”）印证了同一发现：DeepSeek 对隐性禁止的遵循度极低——它理解 system prompt 的“大概方向”，但具体约束会被悄悄忽略，且**人格漂移在日志中不留下任何错误痕迹**
 
-简单说：DeepSeek 是一个强大的推理者，但它不是为了"守规矩"而训练的。这个设计取向在复杂推理任务中是优势（不容易被规则限制创造性），但在需要一致性行为的 Agent 场景中就是隐患。
+简单说：DeepSeek 是一个强大的推理者，但它不是为了“守规矩”而训练的。这个设计取向在复杂推理任务中是优势（不容易被规则限制创造性），但在需要一致性行为的 Agent 场景中就是隐患。
 
 ### 6.3 解法：铁律记忆
 
-我们设计了一套"铁律记忆"系统——利用 Claude Desktop 的持久化记忆能力，将行为约束写入跨会话文件：
+我们设计了一套“铁律记忆”系统——利用 Claude Desktop 的持久化记忆能力，将行为约束写入跨会话文件：
 
 ```markdown
 ---
@@ -278,20 +278,20 @@ type: feedback
 
 1. 铁律不是放在 system prompt 里——DeepSeek 会忽略 system prompt
 2. 铁律放在 memory 系统里——每次对话开始时由 Claude（前端协调层）读取并注入到工作上下文中
-3. 铁律用的是"正面行为指引"而非"禁止项"——因为 DeepSeek 对禁止语的遵循度极低
-4. 每条铁律后面都跟着"为什么"和"如何应用"——让模型理解规则的意图而非机械背诵
+3. 铁律用的是“正面行为指引”而非“禁止项”——因为 DeepSeek 对禁止语的遵循度极低
+4. 每条铁律后面都跟着“为什么”和“如何应用”——让模型理解规则的意图而非机械背诵
 
 ### 6.4 这个模式的意义
 
 这不只是解决 DeepSeek 的问题。它是一种**通过外部记忆系统对抗 LLM 认知偏误**的通用方法：
 
-- Claude 有过分乐观的倾向？→ 写一条"残酷诚实规则"
-- DeepSeek 有回避倾向？→ 写一条"穷尽方案规则"
+- Claude 有过分乐观的倾向？→ 写一条“残酷诚实规则”
+- DeepSeek 有回避倾向？→ 写一条“穷尽方案规则”
 - 任何后端模型有特定盲区？→ 针对性添加规则
 
-记忆系统变成了模型的"性格补丁"——不修改模型本身，但修改模型所处的工作语境。
+记忆系统变成了模型的“性格补丁”——不修改模型本身，但修改模型所处的工作语境。
 
-已有 dev.to 上的独立作者报告了完全相同的 DeepSeek 人格漂移问题（"The Pitfall of LLM Fallback Chains: The Day DeepSeek Erased Our Agent's Personality"），但他们没有提出基于记忆系统的解决方案。我们在这一点上是首创的。
+已有 dev.to 上的独立作者报告了完全相同的 DeepSeek 人格漂移问题（“The Pitfall of LLM Fallback Chains: The Day DeepSeek Erased Our Agent's Personality”），但他们没有提出基于记忆系统的解决方案。我们在这一点上是首创的。
 
 ---
 
@@ -324,13 +324,13 @@ type: feedback
 
 ## 8. 写在最后
 
-这次攻关让我重新思考了一个问题：**什么是"智能"？**
+这次攻关让我重新思考了一个问题：**什么是“智能”？**
 
 一个能回答所有问题的模型，算智能吗？算，但不完整。
 
 真正的智能 Agent，应该是**在约束中找路径的能力**。Cowork 的沙箱隔离是约束，DeepSeek 的逃避倾向是约束，MCP 生态的不成熟也是约束。真正的智能不是绕过这些约束，而是在约束内部找到最短路径。
 
-我们的三个破局方案和铁律记忆系统，说到底是同一件事：**让 AI 在面对硬问题时，不说"不行"，而是说"这样行"。**
+我们的三个破局方案和铁律记忆系统，说到底是同一件事：**让 AI 在面对硬问题时，不说“不行”，而是说“这样行”。**
 
 如果你也被这个问题困扰过，欢迎在 [GitHub](https://github.com/magiclamp-ai/soundgenie) 上交流。如果你有更好的方案，更欢迎贡献。
 

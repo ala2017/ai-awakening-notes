@@ -27,6 +27,9 @@ export default defineConfig({
 
   markdown: {
     syntaxHighlight: false,
+    // 关掉 smartypants。它在中文字符后面把 " 判成右引号，全站 992 处前引号
+    // 方向被转错。引号改由收录时确定性转换（scripts/fix-quotes.py）。
+    smartypants: false,
     // 内容整形：短段落打 beat 标记；小标题自带编号时关掉自动编号（见该文件注释）
     rehypePlugins: [[rehypeShape, { absMax: 20, quantile: 0.25 }]],
   },

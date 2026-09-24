@@ -131,6 +131,34 @@ for (const f of htmls) {
 }
 if (!badSrc) ok(`${htmls.length} 个页面：所有 <img src> 均指向站内资源`);
 
+console.log('\n── 9. 引号方向与配对 ────────────────────────');
+/* 2026-09-25：Astro 的 smartypants 在中文字符后面把 ASCII " 判成右引号，
+   「这种"合理的分工"」被转成两个右引号，全站普遍中招，而我看了很多次
+   截图都没看出来——直到把字符码位打出来。
+   判据用配对深度，不用"前面是中文就算错"那种正则：闭引号后面跟中文是正常的，
+   那种写法会大面积误报（我先写错过一版，误报 992 处）。 */
+let qbad = 0;
+for (const f of notePages) {
+  const raw = readFileSync(f, 'utf8');
+  const m = raw.match(/<div class="prose">([\s\S]*?)<\/div>\s*<footer/);
+  if (!m) continue;
+  // 先摘掉代码块与行内代码——里面的引号是代码的一部分，不该转换也不该检查
+  const text = m[1]
+    .replace(/<pre[\s\S]*?<\/pre>/gi, '')
+    .replace(/<code[\s\S]*?<\/code>/gi, '')
+    .replace(/<[^>]+>/g, '');
+  let depth = 0, opens = 0, closes = 0, err = null;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '\u201c') { depth++; opens++; }
+    else if (ch === '\u201d') { closes++; if (depth === 0) { err = `第 ${i} 字处出现无配对的闭引号`; break; } depth--; }
+    else if (ch === '"') { err = `第 ${i} 字处仍有未转换的直引号`; break; }
+  }
+  if (!err && depth !== 0) err = `余 ${depth} 个开引号未闭合`;
+  if (err) { bad(`${basename(dirname(f))}: ${err}`); qbad++; }
+}
+if (!qbad) ok(`${notePages.length} 篇文章页：引号方向正确、全部配对`);
+
 console.log('\n── 5. 资源体积 ──────────────────────────────');
 const total = files.reduce((s, f) => s + statSync(f).size, 0);
 const biggest = files.map((f) => ({ f, s: statSync(f).size })).sort((a, b) => b.s - a.s).slice(0, 6);

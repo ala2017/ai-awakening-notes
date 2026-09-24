@@ -67,6 +67,51 @@ def read_text(p):
             continue
     raise SystemExit('❌ %s 无法解码' % p)
 
+# 简体出版物里夹繁体字是错字，不是风格。用 zhconv 逐字比对；
+# 没有 zhconv 就退化到一张常见繁体字表，宁可漏报不可误改。
+_TRAD_COMMON = set('問說這個時間東話對後實現聲學體驗點爲與專從會來裡發現應該樣為什麼們個沒還開關長門風雲電氣體國學')
+
+
+def simplify_check(text, warnings):
+    """返回 (可能已转简的文本, 改动数)。无法比对时原样返回。"""
+    try:
+        import zhconv
+    except ImportError:
+        hits = sorted({c for c in text if c in _TRAD_COMMON})
+        if hits:
+            warnings.append('疑似繁体残字（未装 zhconv，仅报不改）：%s' % ' '.join(hits))
+        return text, 0
+    conv = zhconv.convert(text, 'zh-cn')
+    diffs = [(a, b) for a, b in zip(text, conv) if a != b]
+    if not diffs:
+        return text, 0
+    pairs = sorted({(a, b) for a, b in diffs})
+    warnings.append('繁体残字 %d 处，已转简体：%s' % (
+        len(diffs), ' '.join('%s→%s' % (a, b) for a, b in pairs[:8])))
+    return conv, len(diffs)
+
+
+def fix_quotes(body):
+    """把正文里的 ASCII 直引号转成中文弯引号。
+    交给 Astro 的 smartypants 会出错：它在中文字符后面把 " 判成右引号，
+    「这种"合理的分工"」会变成两个右引号。改为在收录时按位置确定性转换。"""
+    OPEN, CLOSE = '\u201c', '\u201d'
+    out, n = [], 0
+    for part in re.split(r'(^```[^\n]*\n.*?^```[^\n]*$)', body, flags=re.S | re.M):
+        if part.startswith('```'):
+            out.append(part); continue
+        buf = []
+        for ch in part:
+            if ch == '"':
+                buf.append(OPEN if n % 2 == 0 else CLOSE); n += 1
+            else:
+                buf.append(ch)
+        out.append(''.join(buf))
+    if n % 2:
+        pass  # 奇数在调用处报警
+    return ''.join(out), n
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('folder')
@@ -87,6 +132,8 @@ def main():
         raise SystemExit('❌ 文件夹内应恰好有 1 个 .md，实际 %d 个：%s' % (len(mds), mds))
     src = mds[0]
     text, enc = read_text(src)
+    warnings_early = []
+    text, _nconv = simplify_check(text, warnings_early)
     lines = text.split('\n')
 
     # ---- H1 / 副标题 ----
@@ -112,7 +159,7 @@ def main():
         raise SystemExit('❌ 文件名必须以 YYYY-MM-DD 或 YYYYMMDD 起头，当前：%s' % stem)
     y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))
     fname_time = ('%s:%s' % (m.group(4), m.group(5))) if m.group(4) else '00:00'
-    warnings = []
+    warnings = list(warnings_early)
     try:
         import datetime; datetime.date(y, mo, d)
     except ValueError as e:
@@ -193,6 +240,9 @@ def main():
     body_lines = [l for i, l in enumerate(lines) if i not in drop]
     body = '\n'.join(body_lines)
     body = re.sub(r'(?:\n\s*---\s*)+\s*$', '', body).strip('\n')
+    body, _nq = fix_quotes(body)
+    if _nq % 2:
+        warnings.append('正文引号数为奇数（%d），可能有落单的直引号' % _nq)
 
     # ---- 封面 ----
     imgs = sorted([f for f in glob.glob(os.path.join(folder, '*'))
