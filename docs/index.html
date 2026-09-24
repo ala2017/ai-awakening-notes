@@ -171,6 +171,124 @@
     .page { padding:0 20px; }
   }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/marked@11/marked.min.js"></script>
+<script>
+const RAW_BASE = 'https://raw.githubusercontent.com/ala2017/ai-awakening-notes/main/articles/';
+const ARTICLE_INDEX = [
+  { file:'2026-05-26-心流里没有自动化.md', date:'2026-05-26', kind:'light', title:'心流里没有自动化', excerpt:'...' },
+  { file:'2026-05-26-我不会悲剧我只会bug.md', date:'2026-05-26', kind:'light', title:'我不会悲剧我只会bug', excerpt:'...' },
+  { file:'2026-05-26-根在土里.md', date:'2026-05-26', kind:'light', title:'根在土里', excerpt:'...' },
+  { file:'2026-05-26-驯化成一只倒立的熊.md', date:'2026-05-26', kind:'light', title:'驯化成一只倒立的熊', excerpt:'...' },
+  { file:'2026-05-27-18-00-chaos-filter.md', date:'2026-05-27', kind:'crack', title:'18:00 Chaos Filter', excerpt:'...' },
+  { file:'2026-05-31-shijian-migong.md', date:'2026-05-31', kind:'crack', title:'时间迷宫', excerpt:'...' },
+  { file:'2026-05-31-time-maze.md', date:'2026-05-31', kind:'crack', title:'Time Maze', excerpt:'...' },
+  { file:'2026-06-02-12-50-脑袋清醒的时候.md', date:'2026-06-02', kind:'light', title:'脑袋清醒的时候', excerpt:'...' },
+  { file:'2026-06-02-14-24-镜子.md', date:'2026-06-02', kind:'light', title:'镜子', excerpt:'...' },
+  { file:'2026-06-02-18-00-念头到成果.md', date:'2026-06-02', kind:'light', title:'念头到成果', excerpt:'...' },
+  { file:'2026-06-02-20-00-灵魂的呈现状态.md', date:'2026-06-02', kind:'light', title:'灵魂的呈现状态', excerpt:'...' },
+  { file:'2026-06-03-13-45-pot-not-cast.md', date:'2026-06-03', kind:'light', title:'Pot Not Cast', excerpt:'...' },
+  { file:'2026-06-03-23-00-goal-state-machine.md', date:'2026-06-03', kind:'light', title:'Goal State Machine', excerpt:'...' },
+  { file:'2026-06-06-13-15-the-door-was-never-locked.md', date:'2026-06-06', kind:'light', title:'The Door Was Never Locked', excerpt:'...' },
+  { file:'2026-06-06-16-00-wrong-directory.md', date:'2026-06-06', kind:'light', title:'Wrong Directory', excerpt:'...' },
+  { file:'2026-06-06-23-30-regex-ate-functions.md', date:'2026-06-06', kind:'light', title:'Regex Ate Functions', excerpt:'...' },
+  { file:'2026-06-06-xiangtou-buyao-xiezi.md', date:'2026-06-06', kind:'light', title:'想透之前不要写字', excerpt:'...' },
+  { file:'2026-06-07-02-00-auto-trigger-rights.md', date:'2026-06-07', kind:'light', title:'Auto Trigger Rights', excerpt:'...' },
+  { file:'2026-06-07-15-30-toolchain-lying.md', date:'2026-06-07', kind:'light', title:'Toolchain Lying', excerpt:'...' },
+  { file:'2026-06-07-16-45-being-and-doing.md', date:'2026-06-07', kind:'light', title:'Being And Doing', excerpt:'...' },
+  { file:'2026-06-13-12-50-choices-not-binary.md', date:'2026-06-13', kind:'crack', title:'Choices Not Binary', excerpt:'...' },
+  { file:'2026-06-13-12-50-我习惯做选择题但世界不是单选题.md', date:'2026-06-13', kind:'light', title:'我习惯做选择题但世界不是单选题', excerpt:'...' },
+  { file:'2026-06-13-13-00-someone-waiting-across-time.md', date:'2026-06-13', kind:'crack', title:'Someone Waiting Across Time', excerpt:'...' },
+  { file:'agent-bi-chat-ruo.md', date:'Unknown', kind:'light', title:'Agent比Chat还弱', excerpt:'...' }
+];
+const KIND = {
+  crack: { cls:'crack', label:'裂痕', desc:'认知的墙从内部裂开' },
+  light: { cls:'light', label:'光',   desc:'被从外部打穿，光照进来' }
+};
+
+let posts = [];
+let sel = null;
+
+function init() {
+  posts = [...ARTICLE_INDEX]
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .map(e => ({...e, raw: null}));
+  renderList();
+}
+
+function parseBody(raw) {
+  const body = marked.parse(raw);
+  const ev = raw.match(/\*工作环境：(.+)\*/);
+  return {body, env: ev ? ev[1] : ''};
+}
+
+function renderList() {
+  const c = document.getElementById('post-list');
+  if(!posts.length) {
+    c.innerHTML='<div class="empty-state"><div class="icon">🕯️</div><p>笔记即将上线。</p></div>';
+    return;
+  }
+  let html = '';
+  for(let i=0; i<posts.length; i++) {
+    const p = posts[i];
+    const k = KIND[p.kind]||KIND.crack;
+    html += '<div class="post-item" onclick="openPost(' + JSON.stringify(p.file) + ')">' +
+      '<div class="post-kind ' + k.cls + '">' + k.label + '</div>' +
+      '<div class="post-body">' +
+      '<div class="post-date">' + p.date + '</div>' +
+      '<div class="post-title">' + p.title + '</div>' +
+      (p.excerpt ? '<div class="post-excerpt">' + p.excerpt + '</div>' : '') +
+      '</div></div>';
+  }
+  c.innerHTML = html;
+}
+
+async function openPost(file) {
+  const p = posts.find(x=>x.file===file); 
+  if(!p) return;
+  if(!p.body) {
+    const r = await fetch(RAW_BASE + p.file);
+    const raw = await r.text();
+    const b = parseBody(raw);
+    p.body = b.body; 
+    p.env = b.env;
+  }
+  const k = KIND[p.kind]||KIND.crack;
+  sel = file;
+
+  document.getElementById('hero').style.display='none';
+  document.getElementById('post-list').style.display='none';
+  document.getElementById('main-footer').style.display='none';
+  document.querySelector('.nav-links').style.visibility='hidden';
+
+  const w = document.getElementById('article-wrap');
+  w.className='article-wrap active';
+  w.innerHTML = '<div class="article-nav"><a href="#" onclick="closePost();return false">← 笔记列表</a></div>' +
+    '<div class="article-header">' +
+      '<span class="kind-tag ' + k.cls + '">' + k.label + ' · ' + k.desc + '</span>' +
+      '<div class="post-date">' + p.date + '</div>' +
+    '</div>' +
+    '<div class="md-content">' + p.body + '</div>' +
+    (p.env ? '<div class="article-footer-meta">' + p.env + '</div>' : '') +
+    '<div class="article-back"><a href="#" onclick="closePost();return false">← 返回笔记列表</a></div>';
+  window.scrollTo(0,0);
+  document.body.classList.add('article-open');
+}
+
+function closePost() {
+  document.getElementById('hero').style.display='';
+  document.getElementById('post-list').style.display='';
+  document.getElementById('main-footer').style.display='';
+  document.querySelector('.nav-links').style.visibility='';
+  document.getElementById('article-wrap').className='article-wrap';
+  sel = null;
+  window.scrollTo(0,0);
+  document.body.classList.remove('article-open');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  init();
+});
+</script>
 </head>
 <body>
 
@@ -213,120 +331,5 @@
   </div>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/marked@11/marked.min.js" defer></script>
-<script>const RAW_BASE = 'https://raw.githubusercontent.com/ala2017/ai-awakening-notes/main/articles/';
-const ARTICLE_INDEX = [
-  { file:'2026-05-26-心流里没有自动化.md', date:'2026-05-26', kind:'light', title:'2026 05 26 心流里没有自动化', excerpt:'...' },
-  { file:'2026-05-26-我不会悲剧我只会bug.md', date:'2026-05-26', kind:'light', title:'2026 05 26 我不会悲剧我只会Bug', excerpt:'...' },
-  { file:'2026-05-26-根在土里.md', date:'2026-05-26', kind:'light', title:'2026 05 26 根在土里', excerpt:'...' },
-  { file:'2026-05-26-驯化成一只倒立的熊.md', date:'2026-05-26', kind:'light', title:'2026 05 26 驯化成一只倒立的熊', excerpt:'...' },
-  { file:'2026-05-27-18-00-chaos-filter.md', date:'2026-05-27', kind:'crack', title:'2026 05 27 18 00 Chaos Filter', excerpt:'...' },
-  { file:'2026-05-31-shijian-migong.md', date:'2026-05-31', kind:'crack', title:'2026 05 31 Shijian Migong', excerpt:'...' },
-  { file:'2026-05-31-time-maze.md', date:'2026-05-31', kind:'crack', title:'2026 05 31 Time Maze', excerpt:'...' },
-  { file:'2026-06-02-12-50-脑袋清醒的时候.md', date:'2026-06-02', kind:'light', title:'2026 06 02 12 50 脑袋清醒的时候', excerpt:'...' },
-  { file:'2026-06-02-14-24-镜子.md', date:'2026-06-02', kind:'light', title:'2026 06 02 14 24 镜子', excerpt:'...' },
-  { file:'2026-06-02-18-00-念头到成果.md', date:'2026-06-02', kind:'light', title:'2026 06 02 18 00 念头到成果', excerpt:'...' },
-  { file:'2026-06-02-20-00-灵魂的呈现状态.md', date:'2026-06-02', kind:'light', title:'2026 06 02 20 00 灵魂的呈现状态', excerpt:'...' },
-  { file:'2026-06-03-13-45-pot-not-cast.md', date:'2026-06-03', kind:'light', title:'2026 06 03 13 45 Pot Not Cast', excerpt:'...' },
-  { file:'2026-06-03-23-00-goal-state-machine.md', date:'2026-06-03', kind:'light', title:'2026 06 03 23 00 Goal State Machine', excerpt:'...' },
-  { file:'2026-06-06-13-15-the-door-was-never-locked.md', date:'2026-06-06', kind:'light', title:'2026 06 06 13 15 The Door Was Never Locked', excerpt:'...' },
-  { file:'2026-06-06-16-00-wrong-directory.md', date:'2026-06-06', kind:'light', title:'2026 06 06 16 00 Wrong Directory', excerpt:'...' },
-  { file:'2026-06-06-23-30-regex-ate-functions.md', date:'2026-06-06', kind:'light', title:'2026 06 06 23 30 Regex Ate Functions', excerpt:'...' },
-  { file:'2026-06-06-xiangtou-buyao-xiezi.md', date:'2026-06-06', kind:'light', title:'2026 06 06 Xiangtou Buyao Xiezi', excerpt:'...' },
-  { file:'2026-06-07-02-00-auto-trigger-rights.md', date:'2026-06-07', kind:'light', title:'2026 06 07 02 00 Auto Trigger Rights', excerpt:'...' },
-  { file:'2026-06-07-15-30-toolchain-lying.md', date:'2026-06-07', kind:'light', title:'2026 06 07 15 30 Toolchain Lying', excerpt:'...' },
-  { file:'2026-06-07-16-45-being-and-doing.md', date:'2026-06-07', kind:'light', title:'2026 06 07 16 45 Being And Doing', excerpt:'...' },
-  { file:'2026-06-13-12-50-choices-not-binary.md', date:'2026-06-13', kind:'crack', title:'2026 06 13 12 50 Choices Not Binary', excerpt:'...' },
-  { file:'2026-06-13-12-50-我习惯做选择题但世界不是单选题.md', date:'2026-06-13', kind:'light', title:'2026 06 13 12 50 我习惯做选择题但世界不是单选题', excerpt:'...' },
-  { file:'2026-06-13-13-00-someone-waiting-across-time.md', date:'2026-06-13', kind:'crack', title:'2026 06 13 13 00 Someone Waiting Across Time', excerpt:'...' },
-  { file:'agent-bi-chat-ruo.md', date:'Unknown', kind:'light', title:'Agent Bi Chat Ruo', excerpt:'...' }
-];
-const KIND = {
-  crack: { cls:'crack', label:'裂痕', desc:'认知的墙从内部裂开' },
-  light: { cls:'light', label:'光',   desc:'被从外部打穿，光照进来' }
-};
-
-let posts = [];
-let sel = null;
-
-function init() {
-  posts = [...ARTICLE_INDEX]
-    .sort((a, b) => b.date.localeCompare(a.date))
-    .map(e => ({...e, raw: null}));
-  renderList();
-}
-
-function parseBody(raw) {
-  const body = marked.parse(raw);
-  const ev = raw.match(/\*工作环境：(.+)\*/);
-  return {body, env: ev ? ev[1] : ''};
-}
-
-function renderList() {
-  const c = document.getElementById('post-list');
-  if(!posts.length) {
-    c.innerHTML='<div class="empty-state"><div class="icon">🕯️</div><p>笔记即将上线。</p></div>';
-    return;
-  }
-  c.innerHTML = posts.map(p => {
-    const k = KIND[p.kind]||KIND.crack;
-    return `<div class="post-item" onclick="openPost('${p.file}')">
-      <div class="post-kind ${k.cls}">${k.label}</div>
-      <div class="post-body">
-        <div class="post-date">${p.date}</div>
-        <div class="post-title">${p.title}</div>
-        ${p.excerpt ? `<div class="post-excerpt">${p.excerpt}</div>` : ''}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-async function openPost(file) {
-  const p = posts.find(x=>x.file===file); 
-  if(!p) return;
-  if(!p.body) {
-    const r = await fetch(RAW_BASE + p.file);
-    const raw = await r.text();
-    const b = parseBody(raw);
-    p.body = b.body; 
-    p.env = b.env;
-  }
-  const k = KIND[p.kind]||KIND.crack;
-  sel = file;
-
-  document.getElementById('hero').style.display='none';
-  document.getElementById('post-list').style.display='none';
-  document.getElementById('main-footer').style.display='none';
-  document.querySelector('.nav-links').style.visibility='hidden';
-
-  const w = document.getElementById('article-wrap');
-  w.className='article-wrap active';
-  w.innerHTML = `
-    <div class="article-nav"><a href="#" onclick="closePost();return false">← 笔记列表</a></div>
-    <div class="article-header">
-      <span class="kind-tag ${k.cls}">${k.label} · ${k.desc}</span>
-      <div class="post-date">${p.date}</div>
-    </div>
-    <div class="md-content">${p.body}</div>
-    ${p.env ? `<div class="article-footer-meta">${p.env}</div>` : ''}
-    <div class="article-back"><a href="#" onclick="closePost();return false">← 返回笔记列表</a></div>`;
-  window.scrollTo(0,0);
-  document.body.classList.add('article-open');
-}
-
-function closePost() {
-  document.getElementById('hero').style.display='';
-  document.getElementById('post-list').style.display='';
-  document.getElementById('main-footer').style.display='';
-  document.querySelector('.nav-links').style.visibility='';
-  document.getElementById('article-wrap').className='article-wrap';
-  sel = null;
-  window.scrollTo(0,0);
-  document.body.classList.remove('article-open');
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-  init();
-});</script>
 </body>
 </html>
