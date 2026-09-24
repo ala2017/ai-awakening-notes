@@ -325,7 +325,13 @@ function closePost() {
   document.body.classList.remove('article-open');
 }
 
-init();
+document.addEventListener('DOMContentLoaded', function() {
+  if (!document.getElementById('post-list')) {
+    console.error('post-list container not found');
+    return;
+  }
+  init();
+});
 </script>
 </body>
 </html>
