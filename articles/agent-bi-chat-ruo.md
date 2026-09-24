@@ -338,3 +338,5 @@ type: feedback
 - [Anthropic Custom Connectors 官方文档](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp)
 - [DeepSeek 系列模型的规则遵循问题](https://genai.stackexchange.com/questions/2218/why-should-one-avoid-adding-a-system-prompt-with-deepseek-r1) — 为什么要避免在 DeepSeek 中使用 system prompt
 - [Session-Scoped Rule Injection 安全研究](https://arxiv.org/abs/2510.27091)
+
+*本文由 Codex + DeepSeek V4 Pro 辅助写作*
