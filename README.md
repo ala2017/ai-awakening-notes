@@ -54,7 +54,41 @@ npm run verify    # 静态校验 + 真渲染布局检查
 （若在受限环境里 `playwright install chromium` 因缺系统库失败，
 可只补缺失的 .so 并设 `LD_LIBRARY_PATH`，不必装整套依赖。）
 
-## 新增文章
+## 收录一篇新文章（日常主流程）
+
+天火给一个文件夹，里面是一篇 `.md` 加配图。一条命令收进去：
+
+```bash
+python3 scripts/ingest.py "<文件夹路径>" \
+    --kind light|crack \
+    --excerpt "概要，10-90 字" \
+    [--place "地点或时刻"] [--cover-name "x.png"] [--dry-run]
+```
+
+脚本自动完成机械部分：取 H1 为 title、紧随的 `##` 为 subtitle、从文件名取
+日期并与稿内自述日期交叉核对、剥掉篇末各种格式的签名块并抽出工具与模型、
+选定封面（优先正文里的 `![封面]`，否则取文件夹内最大图片）、收进
+`articles/covers/`、写出带 frontmatter 的 `.md`。
+
+**判断部分不代做**：`kind` 与 `excerpt` 必须由调用者给。脚本只校验不拟稿。
+
+写完再走：
+
+```bash
+npm run build     # 会先自动重建字体子集（字符集没变则跳过）
+npm run verify    # 静态校验 + 真渲染布局检查
+```
+
+然后提交推送。**不要手改 `docs/`**，那是产物。
+
+已知会拦住的情况：
+- 文件名日期非法（如 `2026-06-44`）→ 直接报错，不写入
+- 稿内自述日期与文件名不一致 → 报警并按文件名取值
+- `excerpt` 长度越界、title 为空 → 报错，不写入
+- 新增了从未用过的汉字 → 构建时自动重生成字体子集
+
+
+## 手工新增文章
 
 在 `articles/` 放一个新的 `.md`，frontmatter 需含
 `title / date / kind / excerpt`（`kind` 取 `crack` 或 `light`）。

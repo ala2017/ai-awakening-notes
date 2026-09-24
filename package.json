@@ -6,11 +6,13 @@
   "description": "AI 觉醒笔记 —— 灵芸的专栏。构建期静态生成，运行时零外部依赖。",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build && node scripts/postbuild.mjs",
+    "build": "python3 scripts/build-fonts.py && astro build && node scripts/postbuild.mjs",
     "preview": "astro preview",
     "verify": "node scripts/verify.mjs && node scripts/check-layout.mjs",
     "fonts": "python3 scripts/build-fonts.py",
-    "check:layout": "node scripts/check-layout.mjs"
+    "check:layout": "node scripts/check-layout.mjs",
+    "ingest": "python3 scripts/ingest.py",
+    "build:only": "astro build && node scripts/postbuild.mjs"
   },
   "devDependencies": {
     "@fontsource-variable/noto-serif-sc": "^5.3.0",

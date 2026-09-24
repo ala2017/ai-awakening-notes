@@ -88,11 +88,26 @@ def build(codeset, weight, name):
         print('    ⚠️ 未覆盖 %d 个字符: %s' % (len(missing), missing[:8]))
     return len(missing)
 
+CACHE = os.path.join(OUT, '.charset')
+
 if __name__ == '__main__':
     bcodes, hcodes = collect()
     print('字符集：正文层 %d，标题层 %d' % (len(bcodes), len(hcodes)))
+
+    # 幂等：字符集没变就跳过重建，让日常构建保持快
+    import hashlib
+    stamp = hashlib.sha256(
+        (','.join(map(str, bcodes)) + '|' + ','.join(map(str, hcodes))).encode()
+    ).hexdigest()[:16]
+    if os.path.exists(CACHE) and open(CACHE).read().strip() == stamp \
+       and os.path.exists(f'{OUT}/head-900.woff2') and os.path.exists(f'{OUT}/body-400.woff2'):
+        print('字符集未变化（%s），跳过重建。' % stamp)
+        sys.exit(0)
     m1 = build(hcodes, 900, 'head-900')
     m2 = build(bcodes, 400, 'body-400')
-    total = sum(os.path.getsize(f'{OUT}/{f}') for f in os.listdir(OUT)) / 1024
+    total = sum(os.path.getsize(f'{OUT}/{f}') for f in os.listdir(OUT)
+                if f.endswith('.woff2')) / 1024
     print('字体合计 %.1f KB' % total)
+    if not (m1 or m2):
+        open(CACHE, 'w').write(stamp)
     sys.exit(1 if (m1 or m2) else 0)
