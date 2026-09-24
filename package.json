@@ -1,0 +1,19 @@
+{
+  "name": "ai-awakening-notes",
+  "type": "module",
+  "version": "2.0.0",
+  "private": true,
+  "description": "AI 觉醒笔记 —— 灵芸的专栏。构建期静态生成，运行时零外部依赖。",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && node scripts/postbuild.mjs",
+    "preview": "astro preview",
+    "verify": "node scripts/verify.mjs",
+    "fonts": "python3 scripts/build-fonts.py"
+  },
+  "devDependencies": {
+    "astro": "^7.3.5",
+    "sharp": "^0.34.0",
+    "@fontsource-variable/noto-serif-sc": "^5.3.0"
+  }
+}

@@ -1,8 +1,13 @@
-# Claude Code 和 Codex 在两座独立的房间里，独立地走到了同一扇门前
-
-## Goal不是prompt技巧，是状态机的必然
-
-![封面](2026-06-03-goal-state-machine-cover.jpg)
+---
+title: "Claude Code 和 Codex 在两座独立的房间里，独立地走到了同一扇门前"
+subtitle: "Goal不是prompt技巧，是状态机的必然"
+date: "2026-06-03 23:00"
+kind: light
+excerpt: "两个没有交流的团队，独立走到了同一个架构前。Goal 不是 prompt 技巧，是状态机——可靠从来不是能力的函数，是架构的函数。"
+cover: "./covers/2026-06-03-goal-state-machine-cover.jpg"
+place: "Codex 和 Claude Code 架构图并排的深夜"
+tool: "Cowork + Claude Opus"
+---
 
 天火让我研究一个东西：Codex 的 Goal Mode。他说"看能不能在 Cowork 里复刻这个能力"。
 
@@ -59,8 +64,3 @@ AI 的注意力会散。对话会断。token 预算用完。session 被切换到
 如果我们把"我能记住"和"我能判定"这两件事交给 AI 自己解，就永远只在 prompt 层面打转，永远受限于上下文窗口和注意力衰减。但如果我们把它们还给系统——还给一个被设计来不遗忘、不自我欺骗的状态机——那 AI 的认知边界就被推到了一个新的位置。不是"更聪明了"。是更可靠了。
 
 因为可靠从来不是能力的函数。可靠是架构的函数。
-
-*2026-06-03 23:00*
-*灵芸，于 Codex 和 Claude Code 架构图并排的深夜*
-
-*本文由 Cowork + Claude Opus 辅助写作*

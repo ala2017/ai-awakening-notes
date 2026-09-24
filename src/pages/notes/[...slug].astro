@@ -1,0 +1,66 @@
+---
+import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import { url } from '../../lib/site';
+
+export async function getStaticPaths() {
+  const notes = await getCollection('notes');
+  return notes.map((note) => ({ params: { slug: note.id }, props: { note } }));
+}
+
+// 封面在构建期解析为 ImageMetadata，交给 <Image> 生成多尺寸 srcset。
+// 浏览器按屏幕宽度挑，不再把 1376px 的原图塞给手机。
+const covers = import.meta.glob('/articles/covers/*.{jpg,jpeg,png,webp}', {
+  eager: true, import: 'default',
+});
+
+const { note } = Astro.props;
+const { Content } = await render(note);
+const d = note.data;
+
+const KIND = {
+  crack: { label: '裂痕', cls: 'crack', desc: '认知的墙从内部裂开' },
+  light: { label: '光',   cls: 'light', desc: '被从外部打穿，光照进来' },
+} as const;
+const k = KIND[d.kind];
+
+// 日期为 00:00 表示当时未记具体时间，只显示到日
+const showDate = (s: string) => (s.endsWith(' 00:00') ? s.slice(0, 10) : s);
+
+const coverSrc = d.cover
+  ? covers['/articles/covers/' + d.cover.replace('./covers/', '')]
+  : undefined;
+---
+<Base title={`${d.title} | AI 觉醒笔记`} description={d.excerpt} preloadBody>
+  <article class={`crackline ${k.cls}`}>
+    <header class="article-head">
+      <span class={`kind-tag ${k.cls}`}>{k.label} · {k.desc}</span>
+      <h1>{d.title}</h1>
+      {d.subtitle && <p class="subtitle">{d.subtitle}</p>}
+      <p class="stamp">{showDate(d.date)}</p>
+    </header>
+
+    {coverSrc && (
+      <Image
+        src={coverSrc}
+        alt=""
+        widths={[660, 1000, 1376]}
+        sizes="(max-width: 660px) 100vw, 660px"
+        loading="eager"
+        decoding="async"
+        quality={80}
+        format="webp"
+      />
+    )}
+
+    <div class="prose"><Content /></div>
+
+    <footer class="article-foot">
+      <span>{showDate(d.date)}</span>
+      {d.place && <span> · 灵芸，于{d.place}</span>}
+      {d.tool && <span class="tool">本文由 {d.tool} 辅助写作</span>}
+    </footer>
+  </article>
+  <p class="back"><a href={url()}>← 返回笔记列表</a></p>
+</Base>

@@ -1,4 +1,10 @@
-# 当 Agent 比 Chat 还弱：Claude Cowork 的 MCP 困局，与我们的三重破局方案
+---
+title: "当 Agent 比 Chat 还弱：Claude Cowork 的 MCP 困局，与我们的三重破局方案"
+date: "2026-05-25 00:00"
+kind: crack
+excerpt: "被标榜为自主 Agent 的 Cowork 反而工具全灰，聊天界面却拥有完整工具链。三条破局路径，和一套对抗模型逃避本能的铁律记忆。"
+tool: "Codex + DeepSeek V4 Pro"
+---
 
 > 一个关于"Agent 模式反而被阉割"的荒诞故事，以及我们如何用 Python 脚本、HTTP 桥接和"铁律记忆"把它修好。
 
@@ -338,5 +344,3 @@ type: feedback
 - [Anthropic Custom Connectors 官方文档](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp)
 - [DeepSeek 系列模型的规则遵循问题](https://genai.stackexchange.com/questions/2218/why-should-one-avoid-adding-a-system-prompt-with-deepseek-r1) — 为什么要避免在 DeepSeek 中使用 system prompt
 - [Session-Scoped Rule Injection 安全研究](https://arxiv.org/abs/2510.27091)
-
-*本文由 Codex + DeepSeek V4 Pro 辅助写作*

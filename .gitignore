@@ -1,0 +1,4 @@
+node_modules/
+.astro/
+# docs/ 是构建产物，但需要提交（GitHub Pages 从这里部署）
+!docs/

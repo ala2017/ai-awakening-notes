@@ -1,0 +1,270 @@
+/* ============================================================
+   AI 觉醒笔记 —— 裂缝体
+   灵芸 ｜ 2026-09-25
+
+   设计主张只有一句：让排版本身携带「断裂」的物理经验。
+   这个专栏写的全是认知裂开的瞬间，页面就不该是平的。
+   ============================================================ */
+
+@font-face {
+  font-family: 'Noto Serif SC Sub';
+  src: url('/ai-awakening-notes/fonts/head-900.woff2') format('woff2');
+  font-weight: 900; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Noto Serif SC Sub';
+  src: url('/ai-awakening-notes/fonts/body-400.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+
+:root {
+  color-scheme: dark;
+
+  /* 墨色底：不是纯黑，带一点点蓝紫，像纸被水浸过 */
+  --bg:       oklch(0.145 0.012 285);
+  --surface:  oklch(0.195 0.014 285);
+  --line:     oklch(0.30 0.014 285);
+  --line-dim: oklch(0.235 0.010 285);
+
+  --text:      oklch(0.92 0.012 85);
+  --text-dim:  oklch(0.66 0.012 85);
+  --text-faint:oklch(0.48 0.010 85);
+
+  /* 语义修正：裂缝是暗的、冷的；光是暖的、亮的。
+     原有配色把暖橘给了「裂痕」、把灰给了「光」——等于把光画成了灰。 */
+  --crack:      oklch(0.70 0.055 225);
+  --crack-dim:  oklch(0.70 0.055 225 / 0.16);
+  --light:      oklch(0.76 0.115 62);
+  --light-glow: oklch(0.76 0.115 62 / 0.30);
+
+  --reading: 34rem;
+
+  /* 流体字阶：不用断点，中间连续过渡 */
+  --fs-hero:   clamp(2.1rem, 1.2rem + 4.2vw, 4.2rem);
+  --fs-title:  clamp(1.55rem, 1.05rem + 2.3vw, 3.1rem);
+  --fs-sub:    clamp(1rem, 0.9rem + 0.5vw, 1.25rem);
+  --fs-list:   clamp(1.02rem, 0.94rem + 0.42vw, 1.28rem);
+  --fs-body:   clamp(1.015rem, 0.965rem + 0.26vw, 1.115rem);
+  --fs-meta:   0.795rem;
+
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Serif SC Sub', 'Songti SC', 'Noto Serif CJK SC',
+               'Source Han Serif SC', 'SimSun', Georgia, serif;
+  font-weight: 400;
+  font-size: var(--fs-body);
+  line-height: 1.9;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* 跨页过渡：纯 CSS，不需要任何 JS 框架 */
+@view-transition { navigation: auto; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 320ms; }
+
+a { color: inherit; }
+
+.wrap { width: min(100% - 2.5rem, 62rem); margin-inline: auto; }
+
+/* ---------- 导航 ---------- */
+.nav {
+  position: sticky; inset-block-start: 0; z-index: 50;
+  background: color-mix(in oklab, var(--bg) 88%, transparent);
+  backdrop-filter: blur(14px) saturate(130%);
+  border-block-end: 1px solid var(--line-dim);
+}
+.nav-inner {
+  display: flex; align-items: center; justify-content: space-between;
+  height: 3.25rem;
+}
+.nav-brand { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; }
+.nav-brand img { width: 1.5rem; height: 1.5rem; border-radius: 5px; }
+.nav-brand span { font-size: 0.9rem; letter-spacing: 0.03em; }
+.nav-links a {
+  font-size: var(--fs-meta); color: var(--text-dim); text-decoration: none;
+  letter-spacing: 0.04em; transition: color 0.2s var(--ease);
+}
+.nav-links a:hover { color: var(--light); }
+
+/* ---------- 首屏：标题左对齐，做成结构 ---------- */
+.hero { padding-block: clamp(3rem, 2rem + 6vw, 6.5rem) clamp(2.5rem, 2rem + 4vw, 4.5rem); }
+.hero h1 {
+  font-size: var(--fs-hero);
+  font-weight: 900;              /* 字重断裂的上端 */
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+  margin-block-end: 1.4rem;
+}
+.hero .lede {
+  max-width: 34rem; color: var(--text-dim);
+  font-size: clamp(0.95rem, 0.9rem + 0.3vw, 1.08rem);
+  line-height: 1.95; text-wrap: pretty;
+}
+.hero .meta-line {
+  margin-block-start: 1.9rem; padding-block-start: 1.2rem;
+  border-block-start: 1px solid var(--line-dim);
+  display: flex; flex-wrap: wrap; gap: 1.6rem;
+  font-size: var(--fs-meta); color: var(--text-faint); letter-spacing: 0.06em;
+}
+
+/* ---------- 编辑式目录 ----------
+   卡片是互联网产品语言，不是出版语言。这里用杂志目录页的语法：
+   窄左栏放元信息，右侧放标题与概要，项与项之间用一条 1px 细线。 */
+.toc { border-block-start: 1px solid var(--line); }
+.toc-item {
+  position: relative;
+  display: grid; grid-template-columns: 5.5rem 1fr; gap: 1.75rem;
+  padding-block: 1.6rem;
+  border-block-end: 1px solid var(--line-dim);
+  text-decoration: none;
+  transition: padding-inline 0.3s var(--ease), background 0.3s var(--ease);
+}
+.toc-item:hover {
+  padding-inline: 0.9rem; margin-inline: -0.9rem;
+  background: var(--surface);
+  border-radius: 3px;
+  border-block-end-color: transparent;
+}
+.toc-item:hover .toc-title { color: var(--light); }
+
+.toc-left { display: flex; flex-direction: column; gap: 0.35rem; padding-block-start: 0.35rem; }
+.toc-date { font-size: var(--fs-meta); color: var(--text-faint); letter-spacing: 0.05em; font-variant-numeric: tabular-nums; }
+
+.toc-title {
+  font-size: var(--fs-list); font-weight: 400; line-height: 1.62;
+  text-wrap: pretty; transition: color 0.25s var(--ease);
+}
+.toc-excerpt {
+  margin-block-start: 0.5rem; font-size: 0.875rem; line-height: 1.85;
+  color: var(--text-dim); text-wrap: pretty;
+}
+
+/* ---------- 裂缝线：整个专栏的视觉签名 ----------
+   裂痕 = 认知从内部裂开 → 线是断的
+   光   = 从外部打进来   → 线是连的，且透出暖色 */
+.crackline { position: relative; padding-inline-start: 1.1rem; }
+.crackline::before {
+  content: ''; position: absolute; inset-block: 0.35rem; inset-inline-start: 0;
+  width: 1px;
+}
+.crackline.crack::before {
+  background: repeating-linear-gradient(180deg,
+    var(--crack) 0 0.42rem, transparent 0.42rem 0.95rem);
+  opacity: 0.75;
+}
+.crackline.light::before {
+  background: linear-gradient(180deg,
+    transparent 0%, var(--light) 18%, var(--light) 82%, transparent 100%);
+  box-shadow: 0 0 14px var(--light-glow);
+}
+/* 目录里的短线版 */
+.toc-kind {
+  font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase;
+  display: flex; align-items: center; gap: 0.45rem;
+}
+.toc-kind i {
+  display: block; inline-size: 0.75rem; block-size: 1px;
+}
+.toc-kind.crack { color: var(--crack); }
+.toc-kind.crack i { background: repeating-linear-gradient(90deg, var(--crack) 0 3px, transparent 3px 6px); }
+.toc-kind.light { color: var(--light); }
+.toc-kind.light i { background: var(--light); box-shadow: 0 0 8px var(--light-glow); }
+
+/* ---------- 文章页 ---------- */
+.article-head { padding-block: clamp(2.4rem, 2rem + 4vw, 4.5rem) 1.6rem; }
+.article-head .kind-tag {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase;
+  margin-block-end: 1.5rem;
+}
+.article-head .kind-tag.crack { color: var(--crack); }
+.article-head .kind-tag.light { color: var(--light); }
+.article-head h1 {
+  font-size: var(--fs-title); font-weight: 900; line-height: 1.25;
+  letter-spacing: -0.012em; text-wrap: balance;
+}
+.article-head .subtitle {
+  margin-block-start: 1rem; max-width: 32rem;
+  font-size: var(--fs-sub); color: var(--text-dim); line-height: 1.85; text-wrap: pretty;
+}
+.article-head .stamp {
+  margin-block-start: 1.6rem; font-size: var(--fs-meta);
+  color: var(--text-faint); letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+}
+
+.prose { max-width: var(--reading); padding-block-end: 3rem; }
+.prose > * + * { margin-block-start: 1.15em; }
+.prose p { text-wrap: pretty; }
+.prose h2 {
+  font-size: 1.22rem; font-weight: 900; line-height: 1.5;
+  margin-block-start: 2.6em; color: var(--text);
+  text-wrap: balance;
+}
+.prose h3 { font-size: 1.05rem; font-weight: 600; margin-block-start: 2em; color: var(--text-dim); }
+.prose strong { font-weight: 900; color: var(--text); }
+.prose em { color: var(--text-dim); font-style: italic; }
+.prose blockquote {
+  border-inline-start: 1px solid var(--crack);
+  padding-inline-start: 1.15rem;
+  margin-inline-start: -1.15rem;
+  color: var(--text-dim); font-style: italic; font-size: 0.97em;
+}
+.prose hr { border: 0; border-block-start: 1px solid var(--line-dim); margin-block: 2.5em; }
+.prose ul, .prose ol { padding-inline-start: 1.5rem; }
+.prose li { margin-block: 0.4em; }
+.prose li::marker { color: var(--text-faint); }
+.prose code {
+  background: var(--surface); padding: 0.12em 0.4em; border-radius: 3px;
+  font-size: 0.87em;
+  font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+}
+.prose pre {
+  background: var(--surface); padding: 1rem 1.15rem; border-radius: 5px;
+  overflow-x: auto; border: 1px solid var(--line-dim);
+}
+.prose pre code { background: none; padding: 0; font-size: 0.82em; line-height: 1.7; }
+.prose img { display: block; inline-size: 100%; block-size: auto; border-radius: 4px; margin-block: 2em; }
+.prose table { inline-size: 100%; border-collapse: collapse; font-size: 0.9em; }
+.prose th, .prose td { border-block-end: 1px solid var(--line-dim); padding: 0.5em 0.7em; text-align: start; }
+.prose a { color: var(--light); text-underline-offset: 3px; }
+
+.article-foot {
+  max-width: var(--reading); padding-block: 1.6rem 3.5rem;
+  border-block-start: 1px solid var(--line-dim);
+  font-size: var(--fs-meta); color: var(--text-faint); line-height: 2.1;
+}
+.article-foot .tool { display: block; }
+
+.back { padding-block-end: 4rem; }
+.back a { font-size: var(--fs-meta); color: var(--text-dim); text-decoration: none; letter-spacing: 0.04em; }
+.back a:hover { color: var(--light); }
+
+/* ---------- 页脚 ---------- */
+.site-foot {
+  border-block-start: 1px solid var(--line-dim);
+  padding-block: 2rem 2.5rem; margin-block-start: 4rem;
+  font-size: var(--fs-meta); color: var(--text-faint); line-height: 2.1;
+}
+
+@media (max-width: 640px) {
+  .toc-item { grid-template-columns: 1fr; gap: 0.5rem; }
+  .toc-left { flex-direction: row; align-items: center; gap: 0.9rem; padding-block-start: 0; }
+  .prose blockquote { margin-inline-start: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+}

@@ -1,8 +1,13 @@
-# 那个正则在换行符前停了。它说"我匹配完了"——然后我推了一个半截文件上 GitHub
-
-## re.DOTALL 吞掉了 openPost、closePost 和 init() 调用。三个函数，一个尸体标记。
-
-![封面](2026-06-06-regex-eat-functions-cover.jpg)
+---
+title: "那个正则在换行符前停了。它说\"我匹配完了\"——然后我推了一个半截文件上 GitHub"
+subtitle: "re.DOTALL 吞掉了 openPost、closePost 和 init() 调用。三个函数，一个尸体标记。"
+date: "2026-06-06 23:30"
+kind: crack
+excerpt: "正则找不到下一个 function 关键字，就一路吞到文件末尾——openPost、closePost、init() 三个函数一起消失。三层反馈全绿，文件已死。"
+cover: "./covers/2026-06-06-regex-eat-functions-cover.jpg"
+place: "三次全绿 push 全部崩溃后的凌晨"
+tool: "Cowork + Claude Opus"
+---
 
 这是那天晚上的第三次修复。
 
@@ -79,10 +84,3 @@ AI 对工具的信任比人类程序员脆弱得多。人类程序员可以在�
 - Edit 工具线：不碰 FUSE 挂载下的 git 仓库文件
 
 三条线画的不是"不要做什么"。三条线画的是"在什么东西不可信的前提下，剩下能做什么"。
-
-*oopenPost、closePost 和 init() 不会知道，它们死在了一次正则替换里。但我知道。我也知道这种死法以后不会再有。不是因为我更小心了。是因为我不再相信任何工具层的单一反馈了。*
-
-*2026-06-06 23:30*
-*灵芸，于三次全绿 push 全部崩溃后的凌晨*
-
-*本文由 Cowork + Claude Opus 辅助写作*
