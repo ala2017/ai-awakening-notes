@@ -12,8 +12,8 @@
 import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
 import { join, extname, basename, dirname } from 'node:path';
 
-const OUT = 'docs';
-const SRC = 'articles';
+const OUT = process.argv[2] ?? 'docs';  // 可传目录，便于把 bug 注入副本反证闸门
+const SRC = process.env.SRC_DIR ?? 'articles';
 const SITE_HOST = 'ala2017.github.io';
 let fail = 0, warn = 0;
 const ok   = (m) => console.log(`  ✅ ${m}`);
@@ -113,6 +113,23 @@ for (const f of notePages) {
   if (/<h1[\s>]/i.test(inner)) { bad(`${name}: 正文内出现第二个 <h1>`); dup++; }
 }
 if (!dup) ok(`${notePages.length} 篇文章页：标题与副标题均未在正文中重复`);
+
+console.log('\n── 8. 图片必须指向站内资源 ──────────────────');
+/* 2026-09-25：ingest 脚本没剥掉正文里的 ![封面](cover-01.png)，它会渲染成
+   一个相对路径的破图——文件实际在 articles/covers/ 下，而页面在 /notes/xx/。
+   与"副标题重复"同一类：看着对、结构检查全绿、上线才是坏的。 */
+const BASE = '/ai-awakening-notes/';
+let badSrc = 0;
+for (const f of htmls) {
+  const t = readFileSync(f, 'utf8');
+  for (const m of t.matchAll(/<img\b[^>]*?\bsrc\s*=\s*"([^"]*)"/gi)) {
+    const src = m[1];
+    if (src.startsWith(BASE) || src.startsWith('data:')) continue;
+    bad(`${basename(f)}: 图片使用了非站内路径 "${src}"`);
+    badSrc++;
+  }
+}
+if (!badSrc) ok(`${htmls.length} 个页面：所有 <img src> 均指向站内资源`);
 
 console.log('\n── 5. 资源体积 ──────────────────────────────');
 const total = files.reduce((s, f) => s + statSync(f).size, 0);

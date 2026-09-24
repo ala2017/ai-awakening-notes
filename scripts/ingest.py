@@ -82,22 +82,36 @@ def main():
 
     # ---- 日期：文件名优先，与稿内自述交叉核对 ----
     stem = os.path.splitext(os.path.basename(src))[0]
-    m = re.match(r'(\d{4})-(\d{2})-(\d{2})', stem)
+    # 文件名形如 YYYY-MM-DD-HH-MM-标题 或 YYYY-MM-DD-标题；有时分就用，没有记 00:00
+    m = re.match(r'(\d{4})-(\d{2})-(\d{2})(?:-(\d{2})-(\d{2}))?', stem)
     if not m:
         raise SystemExit('❌ 文件名必须以 YYYY-MM-DD 开头，当前：%s' % stem)
     y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))
+    fname_time = ('%s:%s' % (m.group(4), m.group(5))) if m.group(4) else '00:00'
     warnings = []
     try:
         import datetime; datetime.date(y, mo, d)
     except ValueError as e:
         raise SystemExit('❌ 文件名日期非法：%s-%s-%s（%s）' % (m.group(1), m.group(2), m.group(3), e))
     fname_date = '%04d-%02d-%02d' % (y, mo, d)
+    full_date = '%s %s' % (fname_date, fname_time)
 
     inner = re.search(r'日期[：:]\s*(\S+)', text)
     if inner:
         iv = inner.group(1).strip()
         if iv != fname_date:
             warnings.append('稿内自述日期「%s」与文件名「%s」不一致，已按文件名取值' % (iv, fname_date))
+
+    # 篇末署名的日期若与文件名不同（含时分），以篇末为准并报警——
+    # 2026-09-25 实测：文件名 2026-06-14、稿末写 2026-06-44（6 月没有 44 号）
+    sig_date = re.search(r'^\*?(\d{4}-\d{2}-\d{2})(?: (\d{2}:\d{2}))?\*?\s*$', text, re.M)
+    if sig_date and sig_date.group(2):
+        sd = sig_date.group(1); st = sig_date.group(2)
+        if sd == fname_date and st != fname_time:
+            if fname_time == '00:00':
+                full_date = '%s %s' % (sd, st)
+            else:
+                warnings.append('篇末时分「%s」与文件名「%s」不一致，已按文件名取值' % (st, fname_time))
 
     # ---- 篇末签名块 ----
     tail_start = len(lines)
@@ -132,6 +146,13 @@ def main():
         if pm: place = pm.group(1).strip()
 
     drop = {h1i}
+    # 正文里的 ![封面](x) 也要剥掉：封面改由布局从 frontmatter 渲染
+    # （走构建期图片管线出 srcset）。留在正文里会渲染成一个指向
+    # 相对路径的破图——文件实际在 articles/covers/ 下。
+    for i, l in enumerate(lines):
+        if re.match(r'^!\[封面\]\(.+\)\s*$', l):
+            drop.add(i)
+            break
     if subtitle_idx is not None:
         drop.add(subtitle_idx)
         # 副标题后面若紧跟一条分隔线，也一并去掉，否则正文会以一条孤立的 --- 开头
@@ -174,7 +195,7 @@ def main():
     print('┌─ 收录：%s' % slug)
     print('│  title    : %s' % title)
     print('│  subtitle : %s' % (subtitle or '（无）'))
-    print('│  date     : %s' % fname_date)
+    print('│  date     : %s' % full_date)
     print('│  kind     : %s' % a.kind)
     print('│  excerpt  : %s  (%d 字)' % (a.excerpt, len(a.excerpt)))
     print('│  cover    : %s' % (os.path.basename(cover_src) if cover_src else '（无）'))
@@ -191,7 +212,7 @@ def main():
     if a.dry_run:
         print('\n（--dry-run，未写入）')
         print('\n--- 预览：frontmatter ---')
-        print(preview_fm(title, subtitle, fname_date, a.kind, a.excerpt, cover_rel, place, tool))
+        print(preview_fm(title, subtitle, full_date, a.kind, a.excerpt, cover_rel, place, tool))
         print('\n--- 预览：正文末尾 3 行 ---')
         for l in [x for x in body.split('\n') if x.strip()][-3:]:
             print('   ' + l[:70])
@@ -201,7 +222,7 @@ def main():
     os.makedirs('articles/covers', exist_ok=True)
     if cover_src:
         shutil.copy2(cover_src, os.path.join('articles/covers', cover_name))
-    fm = preview_fm(title, subtitle, fname_date, a.kind, a.excerpt, cover_rel, place, tool)
+    fm = preview_fm(title, subtitle, full_date, a.kind, a.excerpt, cover_rel, place, tool)
     open(os.path.join('articles', slug + '.md'), 'w', encoding='utf-8', newline='\n').write(fm + '\n\n' + body + '\n')
     print('\n✅ 已写入 articles/%s.md' % slug)
     if cover_src:
@@ -213,7 +234,7 @@ def preview_fm(title, subtitle, date, kind, excerpt, cover, place, tool):
     J = lambda s: json.dumps(s, ensure_ascii=False)
     out = ['---', 'title: %s' % J(title)]
     if subtitle: out.append('subtitle: %s' % J(subtitle))
-    out.append('date: %s' % J(date + ' 00:00'))
+    out.append('date: %s' % J(date))
     out.append('kind: %s' % kind)
     out.append('excerpt: %s' % J(excerpt))
     if cover: out.append('cover: %s' % J(cover))

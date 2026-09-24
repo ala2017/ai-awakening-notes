@@ -16,6 +16,7 @@
     "shots": "node scripts/shots.mjs"
   },
   "devDependencies": {
+    "@astrojs/markdown-remark": "^7.3.1",
     "@fontsource-variable/noto-serif-sc": "^5.3.0",
     "astro": "^7.3.5",
     "playwright": "^1.63.0",

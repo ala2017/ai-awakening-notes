@@ -280,6 +280,11 @@ table { max-inline-size: 100%; }
 .prose p { text-wrap: pretty; }
 /* 首段是入口：略大一号、略亮一点、与下文多留一点空。
    全是同等重量段落的墙，读起来没有开始，也没有地方停。 */
+/* 顿句：自成一段的短句，是文章的落点。给它上方的空气，让节拍显形。
+   不加大字号、不改颜色——落点不该比论述更响，只需要一次停顿。 */
+.prose > p.beat { margin-block-start: 2.15em; }
+.prose > p.beat + p.beat { margin-block-start: 1.5em; }
+
 .prose > p:first-of-type {
   font-size: 1.055em;
   color: color-mix(in oklab, var(--text) 92%, var(--text-dim));

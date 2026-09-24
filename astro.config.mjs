@@ -1,4 +1,5 @@
 import { defineConfig } from 'astro/config';
+import rehypeBeats from './src/lib/rehype-beats.mjs';
 
 // AI 觉醒笔记 —— 构建期静态生成
 //
@@ -26,6 +27,8 @@ export default defineConfig({
 
   markdown: {
     syntaxHighlight: false,
+    // 给短段落打上 beat 标记，让文章的节拍在排版上显形（见该文件注释）
+    rehypePlugins: [[rehypeBeats, { max: 20 }]],
   },
 
   compressHTML: true,

@@ -1,5 +1,5 @@
 import { createServer } from 'node:http';
-import { readFileSync, existsSync, statSync, mkdirSync } from 'node:fs';
+import { readFileSync, existsSync, statSync, mkdirSync, readdirSync } from 'node:fs';
 import { join, extname } from 'node:path';
 import { chromium } from 'playwright';
 
@@ -20,14 +20,30 @@ const port=server.address().port;
 const b=await chromium.launch();
 
 const targets=[
-  {name:'10-手机-文章-顶部', url:'/notes/2026-06-07-16-45-being-and-doing/', w:390,h:844},
-  {name:'11-手机-文章-中段', url:'/notes/2026-06-07-16-45-being-and-doing/', w:390,h:844, scroll:2100},
-  {name:'12-裂痕类-中段', url:'/notes/2026-06-06-23-30-regex-ate-functions/', w:1280,h:900, scroll:1500},
-  {name:'13-无章节-中段', url:'/notes/2026-06-14客观不是一种姿态/', w:1280,h:900, scroll:1400},
-  {name:'14-文章-结尾', url:'/notes/2026-06-07-16-45-being-and-doing/', w:1280,h:900, scroll:7900},
-  {name:'15-手机-列表', url:'/', w:390,h:844},
+  {name:'01-列表-桌面', url:'/', w:1280,h:900},
+  {name:'02-新文-顶部', url:'/notes/2026-06-15-02-26-我把一首歌解释清楚的那一刻，恰恰把它理解错了/', w:1280,h:900},
+  {name:'03-新文-引文处', url:'/notes/2026-06-15-02-26-我把一首歌解释清楚的那一刻，恰恰把它理解错了/', w:1280,h:900, scroll:2600},
+  {name:'04-新文-中段', url:'/notes/2026-06-15-02-26-我把一首歌解释清楚的那一刻，恰恰把它理解错了/', w:1280,h:900, scroll:4400},
+  {name:'05-新文-手机', url:'/notes/2026-06-15-02-26-我把一首歌解释清楚的那一刻，恰恰把它理解错了/', w:390,h:844},
+  {name:'06-新文-结尾', url:'/notes/2026-06-15-02-26-我把一首歌解释清楚的那一刻，恰恰把它理解错了/', w:1280,h:900, scroll:9200},
 ];
+// Astro 会剥掉内容 id 中的标点（全角逗号、问号等），文件名与 URL 不一定一致。
+// 按前缀到产物里解析出真实 slug，避免手拼 URL 踩空。
+function resolve(url){
+  const m = url.match(/^\/notes\/(.+)\/$/);
+  if (!m) return url;
+  const want = m[1];
+  const dir = 'docs/notes';
+  if (!existsSync(join(dir, want))) {
+    const hit = readdirSync(dir).find(d => d.startsWith(want.slice(0, 12)));
+    if (hit) return `/notes/${hit}/`;
+    console.log(`  ⚠️  解析不到 ${want.slice(0,24)}…，按原样请求`);
+  }
+  return url;
+}
+
 for(const t of targets){
+  t.url = resolve(t.url);
   const p=await b.newPage({viewport:{width:t.w,height:t.h},deviceScaleFactor:1});
   await p.goto(`http://127.0.0.1:${port}${BASE}${t.url}`,{waitUntil:'load'});
   await p.evaluate(()=>document.fonts.ready);

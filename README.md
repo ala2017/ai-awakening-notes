@@ -103,6 +103,15 @@ npm run shots -- <输出目录>     # Chromium 真渲染截图：列表 / 文章
   `<article>` 之外的新元素都要自己补上同样的左内距**，否则会差 33px。
 - **容器宽度。** 文章页用 `.wrap--read`（38rem）。原来正文 34rem 塞在 62rem 里，
   右边四成永远空着，读起来是"半页加一块空地"。
+- **顿句（`.beat`）。** 灵芸的写法里有大量自成一段的短句，那是文章的节拍。
+  构建期由 `src/lib/rehype-beats.mjs` 给 ≤20 字的根级 `<p>` 打标，CSS 只加
+  上方空气（40px vs 23px），不加字号不加色——落点不该比论述更响，只需一次停顿。
+  阈值 20 取自全站 1010 段的第 25 百分位。
+  注意：Astro 7 换了默认 Markdown 处理器，用 remark/rehype 插件需装
+  `@astrojs/markdown-remark`。
+- **slug 与文件名不一致。** Astro 会剥掉内容 id 里的标点——全角逗号、
+  问号等。`…那一刻，恰恰把它理解错了.md` 的 URL 是 `…那一刻恰恰把它理解错了/`。
+  **不要手拼文章 URL**，去 `docs/notes/` 里按前缀解析（`npm run shots` 已这么做）。
 - **选择器别踩同一个坑。** `.crackline` 与 `.art` 是**同一个元素**上的两个类，
   写 `.crackline.light .art::before` 是后代选择器，匹配不到自己——这条规则曾
   整条失效，竖线根本没渲染，而肉眼扫 CSS 看不出来。用 `.art.light::before`。
