@@ -28,7 +28,7 @@ export default defineConfig({
   markdown: {
     syntaxHighlight: false,
     // 给短段落打上 beat 标记，让文章的节拍在排版上显形（见该文件注释）
-    rehypePlugins: [[rehypeBeats, { max: 20 }]],
+    rehypePlugins: [[rehypeBeats, { absMax: 20, quantile: 0.25 }]],
   },
 
   compressHTML: true,

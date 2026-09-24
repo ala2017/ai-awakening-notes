@@ -25,16 +25,38 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(ROOT)
 IMG_EXT = ('.png', '.jpg', '.jpeg', '.webp')
 
-# 篇末签名块可能出现的各种行（天火的历史稿件格式不完全统一）
-SIG_LINE = re.compile(
-    r'^(?:\*{0,2}AI\s*觉醒笔记\*{0,2}'
-    r'|日期[：:].*|署名[：:].*'
-    r'|\*[^*]*灵芸[^*]*\*'
-    r'|\*本文由 .+ 辅助写作\*'
-    r'|\*?\d{4}-\d{1,2}-\d{1,2}(?:\s+\d{1,2}:\d{2})?\*?'
-    r'|---'
-    r')$'
-)
+# 篇末签名块的识别分两级：
+#   STRONG —— 出现即认定"这是签名块"（辅助写作、署名：、灵芸，、AI觉醒笔记）
+#   SOFT   —— 允许被一并剥掉的伴随行（分隔线、整体斜体的行、日期行、空行）
+#
+# 上一版是逐行向上扫、遇到不匹配就停。稿件日期一畸形（如 `*2026-06-16-22 02:27*`）
+# 扫描当场中断，够不到上面的锚点，整块签名没被剥掉。改为先锚定再向两侧扩展。
+STRONG = re.compile(r'辅助写作|署名[：:]|灵芸[，,]|AI\s*觉醒笔记')
+SOFT = re.compile(r'^\s*(?:-{3,}|\*[^*]+\*|\d{4}-\d{1,2}-\d{1,2}[^\n]*|\d{1,2}:\d{2})\s*$')
+
+
+def find_sig_block(lines):
+    """从末尾回溯找签名块，返回 (起始行号, 结束行号) 或 (None, None)。"""
+    last_strong = None
+    for i in range(len(lines) - 1, -1, -1):
+        s = lines[i].strip()
+        if not s:
+            continue
+        if STRONG.search(s):
+            last_strong = i
+            break
+        if not SOFT.match(s):   # 撞到正文段落，说明没有签名块
+            break
+    if last_strong is None:
+        return None, None
+    start = last_strong
+    while start - 1 >= 0 and (not lines[start - 1].strip() or SOFT.match(lines[start - 1])):
+        start -= 1
+    end = last_strong
+    while end + 1 < len(lines) and (not lines[end + 1].strip() or SOFT.match(lines[end + 1])):
+        end += 1
+    return start, end
+
 
 def read_text(p):
     raw = open(p, 'rb').read()
@@ -114,19 +136,12 @@ def main():
                 warnings.append('篇末时分「%s」与文件名「%s」不一致，已按文件名取值' % (st, fname_time))
 
     # ---- 篇末签名块 ----
-    tail_start = len(lines)
-    k = len(lines) - 1
-    saw_sig = False
-    while k >= 0:
-        s = lines[k].strip()
-        if not s:
-            k -= 1; continue
-        if SIG_LINE.match(s):
-            if '日期' in s or '署名' in s or '辅助写作' in s or '灵芸' in s or 'AI觉醒笔记' in s.replace(' ', ''):
-                saw_sig = True
-            tail_start = k; k -= 1; continue
-        break
-    tail = '\n'.join(lines[tail_start:])
+    tail_start, tail_end = find_sig_block(lines)
+    saw_sig = tail_start is not None
+    if not saw_sig:
+        tail_start = len(lines)
+    tail = '\n'.join(lines[tail_start:tail_end + 1] if saw_sig else [])
+
     tool = None
     tm = re.search(r'本文由 (.+?) 辅助写作', tail)
     if tm:
@@ -139,6 +154,15 @@ def main():
             parts = [p for p in parts if p not in ('灵芸', 'AI觉醒笔记')]
             if parts:
                 tool = ' + '.join(parts)
+
+    # 篇末只要出现日期样式的串，就与解析结果核对——防止 2026-06-44、
+    # 2026-06-16-22 这类残字静默通过（前者已被跨检拦住，后者曾是漏网）
+    for m in re.finditer(r'\d{4}-\d{2}-\d{2}(?:[- ]\d{2}(?::?\d{2})?)?', tail):
+        s = m.group(0)
+        if not s.startswith(fname_date):
+            warnings.append('篇末出现疑似日期残字「%s」，与 %s 不符，请核对' % (s, fname_date))
+        elif s != fname_date and s != full_date:
+            warnings.append('篇末日期写「%s」，已按文件名取 %s，请核对' % (s, full_date))
 
     place = a.place
     if not place:
@@ -163,7 +187,7 @@ def main():
                 drop.add(j)
             break
     if saw_sig:
-        drop.update(range(tail_start, len(lines)))
+        drop.update(range(tail_start, tail_end + 1))
     body_lines = [l for i, l in enumerate(lines) if i not in drop]
     body = '\n'.join(body_lines)
     body = re.sub(r'(?:\n\s*---\s*)+\s*$', '', body).strip('\n')
