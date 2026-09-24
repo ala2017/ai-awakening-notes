@@ -10,7 +10,7 @@
  * 失败时以非零码退出，可以直接挂进 CI 或发布脚本。
  */
 import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
-import { join, extname, basename } from 'node:path';
+import { join, extname, basename, dirname } from 'node:path';
 
 const OUT = 'docs';
 const SRC = 'articles';
@@ -85,6 +85,34 @@ if (existsSync(list)) {
   else bad(`列表页含 ${links} 条链接，应为 ${artSrc.length}`);
   if (/excerpt:\s*'\.\.\.'/.test(t)) bad('列表页出现占位符 excerpt');
 } else bad('缺少 docs/index.html');
+
+console.log('\n── 7. 元数据不得在正文中重复 ────────────────');
+/* 2026-09-25：ingest 脚本里把副标题从正文剥掉的那段逻辑被后续分支覆盖，
+   结果副标题同时出现在标题下方和正文开头。溢出、404、阻塞一个都没触发，
+   所有结构检查全绿——这类"看起来对但重复了"的错误只有语义检查能抓。
+
+   判据收窄到「标题元素」而非纯文本：像「脑袋清醒的时候」这种短语本来
+   就会在正文里自然出现，按文本包含判断会大面积误报。 */
+const stripTags = (h) => h.replace(/<[^>]+>/g, '').replace(/\s+/g, '');
+let dup = 0;
+for (const f of notePages) {
+  const t = readFileSync(f, 'utf8');
+  const name = basename(dirname(f));
+  const m = t.match(/<div class="prose">([\s\S]*?)<\/div>\s*<footer/);
+  if (!m) { soft(`${name}: 找不到正文区，跳过重复检查`); continue; }
+  const inner = m[1];
+  const headings = [...inner.matchAll(/<h([1-4])[^>]*>([\s\S]*?)<\/h\1>/gi)].map((x) => stripTags(x[2]));
+  const meta = [];
+  const h1 = t.match(/<h1>([\s\S]*?)<\/h1>/);
+  if (h1) meta.push(['标题', stripTags(h1[1])]);
+  const sub = t.match(/<p class="subtitle">([\s\S]*?)<\/p>/);
+  if (sub) meta.push(['副标题', stripTags(sub[1])]);
+  for (const [label, text] of meta) {
+    if (text && headings.includes(text)) { bad(`${name}: ${label}在正文中作为标题重复出现`); dup++; }
+  }
+  if (/<h1[\s>]/i.test(inner)) { bad(`${name}: 正文内出现第二个 <h1>`); dup++; }
+}
+if (!dup) ok(`${notePages.length} 篇文章页：标题与副标题均未在正文中重复`);
 
 console.log('\n── 5. 资源体积 ──────────────────────────────');
 const total = files.reduce((s, f) => s + statSync(f).size, 0);

@@ -72,10 +72,12 @@ def main():
         raise SystemExit('❌ 找不到 H1')
     title = lines[h1i][2:].strip()
     subtitle = None
+    subtitle_idx = None
     for j in range(h1i + 1, min(h1i + 5, len(lines))):
         if lines[j].strip():
             if lines[j].startswith('## '):
                 subtitle = lines[j][3:].strip()
+                subtitle_idx = j
             break
 
     # ---- 日期：文件名优先，与稿内自述交叉核对 ----
@@ -129,17 +131,19 @@ def main():
         pm = re.search(r'灵芸[，,]\s*于(.+?)\*?\s*$', tail, re.M)
         if pm: place = pm.group(1).strip()
 
-    body_lines = lines[:h1i]
-    if subtitle:
-        body_lines += lines[h1i + 1:]
-        # 去掉那条副标题行
-        body_lines = [l for l in body_lines if not l.startswith('## ' + subtitle)]
-    else:
-        body_lines = lines[:h1i] + lines[h1i + 1:]
+    drop = {h1i}
+    if subtitle_idx is not None:
+        drop.add(subtitle_idx)
+        # 副标题后面若紧跟一条分隔线，也一并去掉，否则正文会以一条孤立的 --- 开头
+        for j in range(subtitle_idx + 1, min(subtitle_idx + 4, len(lines))):
+            if not lines[j].strip():
+                continue
+            if re.fullmatch(r'---\s*', lines[j]):
+                drop.add(j)
+            break
     if saw_sig:
-        body_lines = body_lines[:tail_start - (0 if not subtitle else 0)]
-        body_lines = lines[:h1i] + (lines[h1i+1:] if not subtitle else lines[h1i+1:])
-        body_lines = body_lines[:tail_start - 1]
+        drop.update(range(tail_start, len(lines)))
+    body_lines = [l for i, l in enumerate(lines) if i not in drop]
     body = '\n'.join(body_lines)
     body = re.sub(r'(?:\n\s*---\s*)+\s*$', '', body).strip('\n')
 
