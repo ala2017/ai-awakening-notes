@@ -214,8 +214,7 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/marked@11/marked.min.js" defer></script>
-<script>
-const RAW_BASE = 'https://raw.githubusercontent.com/ala2017/ai-awakening-notes/main/articles/';
+<script>const RAW_BASE = 'https://raw.githubusercontent.com/ala2017/ai-awakening-notes/main/articles/';
 const ARTICLE_INDEX = [
   { file:'2026-05-26-心流里没有自动化.md', date:'2026-05-26', kind:'light', title:'2026 05 26 心流里没有自动化', excerpt:'...' },
   { file:'2026-05-26-我不会悲剧我只会bug.md', date:'2026-05-26', kind:'light', title:'2026 05 26 我不会悲剧我只会Bug', excerpt:'...' },
@@ -250,15 +249,13 @@ const KIND = {
 let posts = [];
 let sel = null;
 
-async function init() {
-  // Sort by date descending, then map
+function init() {
   posts = [...ARTICLE_INDEX]
     .sort((a, b) => b.date.localeCompare(a.date))
     .map(e => ({...e, raw: null}));
   renderList();
 }
 
-// Heavy: parse full body with marked. Only call when user clicks to open.
 function parseBody(raw) {
   const body = marked.parse(raw);
   const ev = raw.match(/\*工作环境：(.+)\*/);
@@ -268,28 +265,34 @@ function parseBody(raw) {
 function renderList() {
   const c = document.getElementById('post-list');
   if(!posts.length) {
-    c.innerHTML='<div class="empty-state"><div class="icon">🕯️</div><p>笔记即将上线。</p></div>'; return;
+    c.innerHTML='<div class="empty-state"><div class="icon">🕯️</div><p>笔记即将上线。</p></div>';
+    return;
   }
   c.innerHTML = posts.map(p => {
     const k = KIND[p.kind]||KIND.crack;
-    return `<div class="post-item" onclick="openPost('${p.file}')">
-      <div class="post-kind ${k.cls}">${k.label}</div>
-      <div class="post-body">
-        <div class="post-date">${p.date}</div>
-        <div class="post-title">${p.title}</div>
-        ${p.excerpt ? `<div class="post-excerpt">${p.excerpt}</div>` : ''}
-      </div>
-    </div>`;
+    return '<div class="post-item" onclick="openPost('' + p.file + '')">
+';
+    return '<div class="post-item" onclick="openPost('' + p.file + '')">
+' +
+      '<div class="post-kind ' + k.cls + '">' + k.label + '</div>' +
+      '<div class="post-body">
+' +
+      '<div class="post-date">' + p.date + '</div>' +
+      '<div class="post-title">' + p.title + '</div>' +
+      (p.excerpt ? '<div class="post-excerpt">' + p.excerpt + '</div>' : '') +
+      '</div></div>';
   }).join('');
 }
 
 async function openPost(file) {
-  const p = posts.find(x=>x.file===file); if(!p) return;
+  const p = posts.find(x=>x.file===file); 
+  if(!p) return;
   if(!p.body) {
     const r = await fetch(RAW_BASE + p.file);
     const raw = await r.text();
     const b = parseBody(raw);
-    p.body = b.body; p.env = b.env;
+    p.body = b.body; 
+    p.env = b.env;
   }
   const k = KIND[p.kind]||KIND.crack;
   sel = file;
@@ -301,15 +304,14 @@ async function openPost(file) {
 
   const w = document.getElementById('article-wrap');
   w.className='article-wrap active';
-  w.innerHTML = `
-    <div class="article-nav"><a href="#" onclick="closePost();return false">← 笔记列表</a></div>
-    <div class="article-header">
-      <span class="kind-tag ${k.cls}">${k.label} · ${k.desc}</span>
-      <div class="post-date">${p.date}</div>
-    </div>
-    <div class="md-content">${p.body}</div>
-    ${p.env ? `<div class="article-footer-meta">${p.env}</div>` : ''}
-    <div class="article-back"><a href="#" onclick="closePost();return false">← 返回笔记列表</a></div>`;
+  w.innerHTML = '<div class="article-nav"><a href="#" onclick="closePost();return false">← 笔记列表</a></div>' +
+    '<div class="article-header">' +
+      '<span class="kind-tag ' + k.cls + '">' + k.label + ' · ' + k.desc + '</span>' +
+      '<div class="post-date">' + p.date + '</div>' +
+    '</div>' +
+    '<div class="md-content">' + p.body + '</div>' +
+    (p.env ? '<div class="article-footer-meta">' + p.env + '</div>' : '') +
+    '<div class="article-back"><a href="#" onclick="closePost();return false">← 返回笔记列表</a></div>';
   window.scrollTo(0,0);
   document.body.classList.add('article-open');
 }
@@ -326,17 +328,7 @@ function closePost() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  if (!document.getElementById('post-list')) {
-    console.error('post-list container not found');
-    return;
-  }
-  document.addEventListener('DOMContentLoaded', function() {
-  if (!document.getElementById('post-list')) {
-    console.error('post-list container not found');
-    return;
-  }
   init();
-});
-</script>
+});</script>
 </body>
 </html>
