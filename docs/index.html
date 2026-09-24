@@ -270,7 +270,7 @@ function renderList() {
   }
   c.innerHTML = posts.map(p => {
     const k = KIND[p.kind]||KIND.crack;
-    return '<div class="post-item" onclick="openPost('' + p.file + '')">
+    return '<div class="post-item" onclick="openPost(''' + p.file + ''')">
 ' +
       '<div class="post-kind ' + k.cls + '">' + k.label + '</div>' +
       '<div class="post-body">
