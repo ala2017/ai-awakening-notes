@@ -16,7 +16,8 @@
     "shots": "node scripts/shots.mjs",
     "publish": "node scripts/publish.mjs",
     "postinstall": "node scripts/install-hooks.mjs",
-    "hooks": "node scripts/install-hooks.mjs"
+    "hooks": "node scripts/install-hooks.mjs",
+    "check:live": "node scripts/check-live.mjs"
   },
   "devDependencies": {
     "@astrojs/markdown-remark": "^7.3.1",
