@@ -196,6 +196,37 @@ table { max-inline-size: 100%; }
 .art::before {
   content: ''; position: absolute; inset-block: 0; inset-inline-start: 0; width: 1px;
 }
+/* 结构目录：让文章的骨架在阅读之前就可见。
+   放在封面之后、正文之前——不抢开头，但读者一眼能看见要走的几段路。 */
+.sec-toc {
+  max-inline-size: var(--reading);
+  margin-block: 0.4rem 2.6rem;
+  padding-block: 1.25rem 1.15rem;
+  border-block: 1px solid var(--line-dim);
+}
+.sec-toc-label {
+  display: block; margin-block-end: 0.75rem;
+  font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text-faint);
+}
+.sec-toc ol { list-style: none; padding: 0; margin: 0; }
+.sec-toc li { margin: 0; }
+.sec-toc a {
+  display: flex; gap: 0.85rem; align-items: baseline;
+  padding-block: 0.28rem;
+  font-size: 0.925rem; line-height: 1.65; color: var(--text-dim);
+  text-decoration: none; transition: color 0.2s var(--ease);
+  text-wrap: pretty;
+}
+.sec-toc a:hover { color: var(--text); }
+.sec-toc-num {
+  flex: none; font-variant-numeric: tabular-nums;
+  font-size: 0.72rem; letter-spacing: 0.08em; color: var(--text-faint);
+}
+.art.crack .sec-toc-num { color: var(--crack); opacity: 0.85; }
+.art.light .sec-toc-num { color: var(--light); opacity: 0.85; }
+.sec-toc a:hover .sec-toc-num { opacity: 1; }
+
 .prose { position: relative; counter-reset: sec; }
 
 .art.crack::before {

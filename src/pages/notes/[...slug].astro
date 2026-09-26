@@ -26,7 +26,16 @@ const covers = import.meta.glob('/articles/covers/*.{jpg,jpeg,png,webp}', {
 });
 
 const { note, earlier, later } = Astro.props;
-const { Content } = await render(note);
+const { Content, headings } = await render(note);
+
+// 结构目录：只对"有足够多章节"的文章出。
+// 一篇 13000px、11 个章节的技术文，读者在点进去之前和读的时候都看不出它的结构——
+// 这是内容层面的损失，不是装饰层面的。少于此数则不出，免得目录比正文还显眼。
+const H2 = (headings ?? []).filter((h) => h.depth === 2);
+const showToc = H2.length >= 4;
+// 小标题自带编号时（见 rehype-shape 的 no-counter 规则），目录里不另加序号
+const numbered = /^\s*\d+\s*[.、)）]/;
+const tocNumbered = H2.some((h) => numbered.test(h.text));
 const d = note.data;
 
 const KIND = {
@@ -63,6 +72,22 @@ const coverSrc = d.cover
         format="webp"
         class="cover"
       />
+    )}
+
+    {showToc && (
+      <nav class="sec-toc" aria-label="本篇结构">
+        <span class="sec-toc-label">本篇结构</span>
+        <ol>
+          {H2.map((h, i) => (
+            <li>
+              <a href={`#${h.slug}`}>
+                {!tocNumbered && <span class="sec-toc-num">{String(i + 1).padStart(2, '0')}</span>}
+                <span>{h.text}</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </nav>
     )}
 
     <div class="prose"><Content /></div>

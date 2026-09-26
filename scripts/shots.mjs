@@ -20,8 +20,8 @@ const port=server.address().port;
 const b=await chromium.launch();
 
 const targets=[
-  {name:'W1-技术文-加宽后', url:'/notes/agent-bi-chat-ruo/', w:1280,h:900, scroll:3400},
-  {name:'W2-叙事文-引文', url:'/notes/2026-06-20-最小单位为什么不能活/', w:1280,h:900, scroll:900},
+  {name:'T1-技术文-页头与目录', url:'/notes/agent-bi-chat-ruo/', w:1280,h:1100, scroll:0},
+  {name:'T2-叙事文-页头与目录', url:'/notes/2026-06-07-15-30-toolchain-lying/', w:1280,h:1100, scroll:0},
 ];
 // Astro 会剥掉内容 id 中的标点（全角逗号、问号等），文件名与 URL 不一定一致。
 // 按前缀到产物里解析出真实 slug，避免手拼 URL 踩空。

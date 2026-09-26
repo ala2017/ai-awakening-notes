@@ -153,7 +153,7 @@ python scripts/gemini_tools.py analyze ui_mockup.png
 
 核心技巧在 `CLAUDE.md` 中加入这段：
 
-```markdown
+````markdown
 ## Session Initialization (Cowork)
 
 Cowork VM 每次会话重置，需在会话开始时安装依赖：
@@ -171,7 +171,7 @@ python scripts/gemini_tools.py generate “提示词” -o output.png
 python scripts/gemini_tools.py describe image.png
 python scripts/gemini_tools.py analyze image.png
 ```
-```
+````
 
 **这个模式可以推广到任何 Python SDK。** 你在 CLAUDE.md 里声明什么依赖，每个新会话就会自动安装。OpenAI、Replicate、HuggingFace——同理。
 

@@ -159,6 +159,35 @@ for (const f of notePages) {
 }
 if (!qbad) ok(`${notePages.length} 篇文章页：引号方向正确、全部配对`);
 
+console.log('\n── 10. 源稿的围栏嵌套 ──────────────────────');
+/* 2026-09-26：给长文加结构目录时发现 agent-bi-chat-ruo 的「4. 路径 2」整节
+   被吞成了代码块——上线三个月没人看见。
+   成因：源稿用 ```markdown 包一段示例，里面又嵌了 ```bash。Markdown 的围栏
+   不能这样嵌套（内层带 info 的围栏不闭合外层），后面的围栏语意整体错位。
+   改法是外层用四个反引号。
+
+   判据只看**同长度且带 info** 的围栏出现在开着的围栏里——那才是嵌套误用。
+   不要用"<pre> 里出现 # 行"来判断：bash 注释、python 注释、示例 markdown
+   本来就长那样，实测会误报 5 处、真问题只有 1 处。 */
+let fenceBad = 0;
+for (const f of readdirSync(SRC).filter((x) => x.endsWith('.md'))) {
+  const lines = readFileSync(join(SRC, f), 'utf8').split('\n');
+  let open = null;
+  lines.forEach((l, i) => {
+    const m = l.match(/^\s*(`{3,}|~{3,})(.*)$/);
+    if (!m) return;
+    const len = m[1].length, info = m[2].trim();
+    if (open === null) { open = len; return; }
+    if (!info && len >= open) { open = null; return; }      // 合法闭合
+    if (info && len === open) {                              // 同长度 + 带 info → 嵌套误用
+      bad(`${f}:${i + 1} 开着的 ${open} 反引号围栏里又出现带 info 的围栏「${info}」`);
+      fenceBad++;
+    }
+  });
+  if (open !== null) { bad(`${f}: 围栏未闭合（余 ${open} 个反引号开着）`); fenceBad++; }
+}
+if (!fenceBad) ok(`${readdirSync(SRC).filter((x) => x.endsWith('.md')).length} 篇源稿：围栏配对正常、无嵌套误用`);
+
 console.log('\n── 5. 资源体积 ──────────────────────────────');
 const total = files.reduce((s, f) => s + statSync(f).size, 0);
 const biggest = files.map((f) => ({ f, s: statSync(f).size })).sort((a, b) => b.s - a.s).slice(0, 6);
