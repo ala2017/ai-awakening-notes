@@ -51,6 +51,28 @@ def collect():
             head.update(m.group(1))
     for p in glob.glob('src/**/*.astro', recursive=True) + glob.glob('src/**/*.ts', recursive=True):
         body.update(open(p, encoding='utf-8').read())
+
+    # 900 字重的取字口径，必须等于「实际会以 900 渲染的文字」，否则缺字会静默掉到
+    # 备用字体，而 font-synthesis:none 又禁掉了假粗——标题会一块一块地变细。
+    # 原来 head 只扫 articles/*.md 的标题行，页面侧（.astro）完全没进：
+    # 2026-09-26 新增项目说明页，标题与加粗当场缺了 13 个字。
+    # 这里补上 .astro 的 h1-h3 与 <strong>，以及 md 正文里的 **加粗**。
+    for p in glob.glob('src/**/*.astro', recursive=True):
+        s = open(p, encoding='utf-8').read()
+        for m in re.finditer(r'<(h1|h2|h3)\b[^>]*>(.*?)</\1>', s, re.S):
+            head.update(re.sub(r'<[^>]+>', '', m.group(2)))
+        for m in re.finditer(r'<strong>(.*?)</strong>', s, re.S):
+            head.update(re.sub(r'<[^>]+>', '', m.group(1)))
+    for p in glob.glob('articles/*.md'):
+        head.update(''.join(re.findall(r'\*\*(.+?)\*\*', open(p, encoding='utf-8').read())))
+
+    # 可打印 ASCII 无条件进两层。
+    # 理由：源码里看不见的东西也会渲染出来——表格里那些层级名在 .astro 里是 {name}，
+    # 正则永远抓不到 Raw Archive / Cognitive Bootstrap 这些真实值，于是 N 和 j 漏了。
+    # 95 个拉丁字形，体积可忽略；漏掉一个字母，某处 900 字重就会掉到备用字体。
+    ASCII = {chr(c) for c in range(0x20, 0x7F)}
+    body |= ASCII
+    head |= ASCII
     def codes(S):
         return sorted({ord(c) for c in S if 0x2E80 <= ord(c) <= 0x9FFF or 0x20 <= ord(c) < 0x7F})
     return codes(body), codes(head)

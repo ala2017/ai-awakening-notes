@@ -129,6 +129,23 @@ table { max-inline-size: 100%; }
 .nav-brand { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; }
 .nav-brand img { width: 1.5rem; height: 1.5rem; border-radius: 5px; }
 .nav-brand span { font-size: 0.9rem; letter-spacing: 0.03em; }
+
+/* logo 有双重身份：既是全站入口，也是「这个项目是什么」的入口。
+   一个没有文字标签的图形，靠悬停变色说不清它通向哪里——把那个问题直接浮出来。
+   （此前项目说明页在站里没有任何入口，只能靠知道 URL。） */
+.nav-brand { position: relative; }
+.nav-brand .brand-name { transition: color 0.22s var(--ease); }
+.nav-brand:hover .brand-name, .nav-brand:focus-visible .brand-name { color: var(--light); }
+.nav-brand .nav-tip {
+  position: absolute; inset-block-start: calc(100% + 0.5rem); inset-inline-start: 0;
+  white-space: nowrap; pointer-events: none;
+  padding: 0.34rem 0.7rem; border-radius: 4px;
+  background: var(--surface); border: 1px solid var(--line-dim);
+  font-size: var(--fs-meta); letter-spacing: 0.03em; color: var(--text-dim);
+  opacity: 0; transform: translateY(-0.3rem);
+  transition: opacity 0.24s var(--ease), transform 0.24s var(--ease);
+}
+.nav-brand:hover .nav-tip, .nav-brand:focus-visible .nav-tip { opacity: 1; transform: none; }
 .nav-links a {
   font-size: var(--fs-meta); color: var(--text-dim); text-decoration: none;
   letter-spacing: 0.04em; transition: color 0.2s var(--ease);
@@ -361,6 +378,22 @@ table { max-inline-size: 100%; }
   color: var(--text-dim); margin-block-start: 2.2em;
   font-size: 1.0rem; font-weight: 900; line-height: 1.6;
   text-wrap: balance;
+}
+
+/* 项目说明页：两类觉醒的小标题直接借用裂缝线的冷暖两色 */
+.prose h3.crack { color: var(--crack); }
+.prose h3.light { color: var(--light); }
+/* 项目说明页的层级对照表：层级名与它的作用叠在一格。
+   三列并排在 34rem 的阅读列里放不下——「原始证据」会被压成两个字一行。 */
+.prose td .role {
+  display: block; margin-block-start: 0.25em;
+  font-size: 0.88em; color: var(--text-faint);
+}
+/* 项目说明页：定义之后那句边界说明。脚注语气，不该和正文争重量。 */
+.prose p.aside-note {
+  font-size: 0.9em; color: var(--text-faint); line-height: 1.85;
+  border-inline-start: 1px solid var(--line-dim);
+  padding-inline-start: 1.1rem; margin-inline-start: -1.15rem;
 }
 .prose strong { font-weight: 900; color: var(--text); }
 .prose em { color: var(--text-dim); font-style: normal; }

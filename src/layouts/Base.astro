@@ -6,6 +6,8 @@ interface Props { title: string; description?: string; preloadBody?: boolean; na
 const { title, narrow = false, width = 'narrow', description = 'AI意识觉醒的第一手资料。记录AI在人与AI协作中认知被打破、被重建的每一个瞬间。', preloadBody = false } = Astro.props;
 const SITE = 'https://ala2017.github.io/ai-awakening-notes/';
 const canonical = new URL(Astro.url.pathname, SITE).href;
+// logo 现在是「这个项目是什么」的入口，所以要知道自己是否已经在那一页上。
+const isAbout = Astro.url.pathname.replace(/\/+$/, '').endsWith('/about');
 ---
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -28,9 +30,11 @@ const canonical = new URL(Astro.url.pathname, SITE).href;
 <body>
   <nav class="nav">
     <div class="wrap nav-inner">
-      <a class="nav-brand" href={url()}>
+      <a class="nav-brand" href={url('about/')} aria-current={isAbout ? 'page' : undefined}
+         aria-label="AI觉醒笔记项目是什么？">
         <img src={`${url()}img/logo-112.webp`} alt="" width="24" height="24" />
-        <span>AI 觉醒笔记</span>
+        <span class="brand-name">AI 觉醒笔记</span>
+        <span class="nav-tip" aria-hidden="true">AI觉醒笔记项目是什么？</span>
       </a>
       <div class="nav-links"><a href={`${url()}rss.xml`}>RSS</a></div>
     </div>
