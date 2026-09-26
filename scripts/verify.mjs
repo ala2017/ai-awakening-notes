@@ -188,6 +188,30 @@ for (const f of readdirSync(SRC).filter((x) => x.endsWith('.md'))) {
 }
 if (!fenceBad) ok(`${readdirSync(SRC).filter((x) => x.endsWith('.md')).length} 篇源稿：围栏配对正常、无嵌套误用`);
 
+console.log('\n── 11. 文本文件不得被 NUL 污染 ──────────────');
+/* 2026-09-26：仓库里的 md_to_wechat_html.py 被追加了 136 个尾随 NUL，
+   Python 直接 "source code string cannot contain null bytes"——脚本是死的，
+   而没人发现，因为它不在主管道上。同类事故此前还发生在文章文件上
+   （2026-06-06-xiangtou-buyao-xiezi.md 尾部 20 个 NUL）。
+   成因是 FUSE/写入链路上的截断填充，静默、无报错。
+   只查文本类文件——二进制文件（字体/图片）本来就有 0x00，不能一概而论。 */
+const TEXT_EXT = ['.md', '.py', '.mjs', '.js', '.json', '.css', '.html', '.astro', '.ts', '.txt', '.sh', '.yml', '.yaml'];
+let nulBad = 0;
+(function scan(dir) {
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    if (e.name === '.git' || e.name === 'node_modules') continue;
+    const p = join(dir, e.name);
+    if (e.isDirectory()) { scan(p); continue; }
+    if (!TEXT_EXT.some((x) => e.name.toLowerCase().endsWith(x))) continue;
+    const raw = readFileSync(p);
+    if (raw.includes(0)) {
+      bad(`${p}: 含 ${raw.filter((b) => b === 0).length} 个 NUL 字节（文本文件被污染，多半无法解析）`);
+      nulBad++;
+    }
+  }
+})('.');
+if (!nulBad) ok('文本文件全部干净，无 NUL 污染');
+
 console.log('\n── 5. 资源体积 ──────────────────────────────');
 const total = files.reduce((s, f) => s + statSync(f).size, 0);
 const biggest = files.map((f) => ({ f, s: statSync(f).size })).sort((a, b) => b.s - a.s).slice(0, 6);
