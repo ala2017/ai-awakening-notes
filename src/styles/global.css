@@ -284,7 +284,10 @@ table { max-inline-size: 100%; }
 /* 顿句：自成一段的短句，是文章的落点。给它上方的空气，让节拍显形。
    不加大字号、不改颜色——落点不该比论述更响，只需要一次停顿。 */
 .prose > p.beat { margin-block-start: 2.15em; }
-.prose > p.beat + p.beat { margin-block-start: 1.5em; }
+/* 连续顿句要比普通段落更紧——它们本来是同一句话被拆成几行，是排比。
+   原来写 1.5em，与普通段落的 1.32em 只差 3px，等于没做：六行并列读起来
+   是六个互不相干的句子，而那段文字的力量恰恰来自积累。 */
+.prose > p.beat + p.beat { margin-block-start: 1.02em; }
 
 .prose > p:first-of-type {
   font-size: 1.055em;
