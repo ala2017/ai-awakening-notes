@@ -66,6 +66,10 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* 关掉字体合成：中文子集只有 400/900 两档、且没有斜体面。
+     不关的话，任何 600 之类的字重、任何 italic 都会被浏览器"合成"出
+     一版假粗/假斜——衬线体上一糊一脏。全站不应存在合成字面。 */
+  font-synthesis: none;
   /* 中文标点挤压与悬挂——浏览器支持时生效，不支持时优雅退化 */
   text-spacing-trim: space-first;
 }
@@ -92,7 +96,18 @@ table { max-inline-size: 100%; }
    原来正文 34rem 塞在 62rem 的容器里，右边四成永远空着，所有内容挤在
    左半边——那不是极简，是没决定过页面有多宽。收窄之后，留白变成对称的
    页边距，读起来才是"一页"，而不是"半页加一块空地"。 */
+/* 阅读列宽按内容逐篇决定（narrow / regular / wide），不是全站一个值。
+   上游 beautiful-article 把"宽度"当成与主题解耦的独立决策，四种模式按
+   内容选：表格/代码多就要宽，纯叙事就要窄。我原来 28 篇全用 34rem——
+   那对叙事文是对的，对带 5 个表格 9 段代码的技术文是塞不下。
+   这里的三档按中文行宽定：narrow≈30 字/行 · regular≈41 · wide≈52。 */
 .wrap--read { width: min(100% - 2.2rem, 38rem); }
+.w-read-regular { width: min(100% - 2.2rem, 50rem); }
+.w-read-wide    { width: min(100% - 2.2rem, 62rem); }
+
+.art { --reading: 34rem; }
+.w-read-regular .art { --reading: 46rem; }
+.w-read-wide .art    { --reading: 58rem; }
 
 /* ---------- 导航 ---------- */
 .nav {
@@ -302,12 +317,15 @@ table { max-inline-size: 100%; }
   text-wrap: balance;
 }
 .prose strong { font-weight: 900; color: var(--text); }
-.prose em { color: var(--text-dim); font-style: italic; }
+.prose em { color: var(--text-dim); font-style: normal; }
+/* 引文不用斜体。中文没有真斜体面，italic 只会被合成为伪斜——
+   上游 press 主题的禁止项也写着"禁用斜体"。区分交给左边线、缩进与色温，
+   这本来就够了：引文已经和正文不是同一种"发声位置"。 */
 .prose blockquote {
   border-inline-start: 1px solid currentColor;
   padding-inline-start: 1.15rem;
   margin-inline-start: -1.15rem;
-  color: var(--text-dim); font-style: italic; font-size: 0.97em;
+  color: var(--text-dim); font-style: normal; font-size: 0.97em;
 }
 .art.crack .prose blockquote { color: color-mix(in oklab, var(--crack) 55%, var(--text-dim)); }
 .art.light .prose blockquote { color: color-mix(in oklab, var(--light) 45%, var(--text-dim)); }
@@ -390,7 +408,8 @@ table { max-inline-size: 100%; }
   .art { padding-inline-start: 1.1rem; }
   .adjacent, .back { padding-inline-start: 1.1rem; }
   .prose h2::after { inset-inline-start: -1.1rem; inline-size: 0.5rem; }
-  .wrap--read { width: min(100% - 1.6rem, 38rem); }
+  .wrap--read, .w-read-regular, .w-read-wide { width: min(100% - 1.6rem, 38rem); }
+  .art, .w-read-regular .art, .w-read-wide .art { --reading: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

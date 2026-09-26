@@ -42,7 +42,7 @@ const coverSrc = d.cover
   ? covers['/articles/covers/' + d.cover.replace('./covers/', '')]
   : undefined;
 ---
-<Base title={`${d.title} | AI 觉醒笔记`} description={d.excerpt} preloadBody narrow>
+<Base title={`${d.title} | AI 觉醒笔记`} description={d.excerpt} preloadBody narrow width={d.width}>
   <article class={`crackline art ${k.cls}`}>
     <header class="article-head">
       <span class={`kind-tag ${k.cls}`}>{k.label} · {k.desc}</span>

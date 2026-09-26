@@ -4,6 +4,7 @@ date: "2026-05-25 00:00"
 kind: crack
 excerpt: "被标榜为自主 Agent 的 Cowork 反而工具全灰，聊天界面却拥有完整工具链。三条破局路径，和一套对抗模型逃避本能的铁律记忆。"
 tool: "Codex + DeepSeek V4 Pro"
+width: regular
 ---
 
 > 一个关于“Agent 模式反而被阉割”的荒诞故事，以及我们如何用 Python 脚本、HTTP 桥接和“铁律记忆”把它修好。

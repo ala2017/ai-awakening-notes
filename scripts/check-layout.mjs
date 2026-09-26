@@ -113,6 +113,40 @@ for (const route of pages) {
 }
 if (fail === 0) console.log(`  ✅ ${pages.length} 个页面 × ${VIEWPORTS.length} 个视口，均无横向溢出`);
 
+// ── 声明的宽度必须真的生效 ──
+// 2026-09-26：一晚之内我三次栽在「写了等于没写」上——裂缝线的选择器匹配不到
+// 自己、h2 字号被后一条规则覆盖、rehype 插件其实没被调用。三者共同点是
+// 「源码里看得出意图，产物里没有」。宽度模式同样可能这样哑掉，所以实测。
+// 三档都要在表里——上一版漏了 narrow，而"新文章没写 width 字段走默认"
+// 恰恰是最可能发生的那种回归：反证时它一声不响地放过了。
+const MEASURES = { narrow: 544, regular: 736, wide: 928 };
+const widthBad = [];
+for (const route of pages) {
+  if (!route.includes('/notes/')) continue;
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  try {
+    await page.goto(`http://127.0.0.1:${port}${BASE}${route.replace(/index\.html$/, '')}`, { waitUntil: 'load' });
+    const r = await page.evaluate(() => {
+      const prose = document.querySelector('.prose');
+      if (!prose) return null;
+      // 宽度类挂在 <main class="wrap wrap--read w-read-X"> 上，不在 .art 上。
+      // 上一版读的是 .art 的 classList——取不到、静默跳过，检查等于没做。
+      const main = document.querySelector('main');
+      const cls = [...(main?.classList ?? [])].find((c) => c.startsWith('w-read-'));
+      return { w: Math.round(prose.getBoundingClientRect().width),
+               mode: cls ? cls.slice(7) : '(无)' };
+    });
+    if (!r) continue;
+    const want = MEASURES[r.mode];
+    if (want && Math.abs(r.w - want) > 8) {
+      widthBad.push(`${route} 声明 ${r.mode}（应 ${want}px），实测 ${r.w}px`);
+    }
+  } catch { /* 已在主流程报过 */ } finally { await page.close(); }
+}
+console.log('\n── 阅读列宽与声明的模式是否一致 ──────────────');
+if (widthBad.length === 0) console.log('  ✅ 各篇阅读列宽与声明的模式一致');
+else { for (const m of widthBad) console.log('  ❌ ' + m); fail += widthBad.length; }
+
 await browser.close();
 server.close();
 console.log('\n' + '─'.repeat(48));

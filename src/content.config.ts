@@ -13,6 +13,10 @@ const notes = defineCollection({
     kind: z.enum(['crack', 'light']),
     excerpt: z.string().min(10).max(90),
     cover: z.string().optional(),
+    // 阅读列宽：逐篇按内容决定，不是全站一个值。
+    // narrow 30 字/行（默认，短文与金句节奏）· regular 41（常规长文）
+    // · wide 58（表格/代码/数据密集）
+    width: z.enum(['narrow', 'regular', 'wide']).default('narrow'),
     place: z.string().optional(),
     tool: z.string().optional(),
   }),
