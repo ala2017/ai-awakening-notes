@@ -64,8 +64,11 @@ const committed = spawnSync('git', ['commit', '-q', '-m', msg], {
 });
 if ((committed.status ?? 0) !== 0) console.log('（没有需要提交的改动，继续推送）');
 
+// GATE_PASSED=1 告诉 pre-push 钩子：本轮已经跑过闸门，别再跑一遍。
+// （手动 git push 不带这个变量，钩子照常拦截。）
 const pushed = spawnSync('git', ['push', 'origin', 'main'], {
-  stdio: 'inherit', env: { ...process.env, GIT_TERMINAL_PROMPT: '0' },
+  stdio: 'inherit',
+  env: { ...process.env, GIT_TERMINAL_PROMPT: '0', GATE_PASSED: '1' },
 });
 
 if ((pushed.status ?? 1) !== 0) {

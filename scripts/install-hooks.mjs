@@ -15,6 +15,12 @@ const hook = `#!/usr/bin/env bash
 #     （钩子不该因为环境缺个 .so 就锁死发布；publish 里它是必须过的）
 set -uo pipefail
 
+# npm run publish 已经跑过同一套闸门，别再跑一遍
+if [ -n "\${GATE_PASSED:-}" ]; then
+  echo "▶ 闸门本轮已由 npm run publish 执行，跳过"
+  exit 0
+fi
+
 echo "▶ 发布前闸门"
 if ! node scripts/verify.mjs; then
   echo "❌ 静态检查未通过，已拦下本次推送。"
