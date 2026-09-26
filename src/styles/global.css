@@ -126,16 +126,18 @@ table { max-inline-size: 100%; }
   display: flex; align-items: center; justify-content: space-between;
   height: 3.25rem;
 }
-.nav-brand { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; }
+/* 导航的两个入口长得像同一个品牌块，去向却不同：logo 回主页，专栏名进项目说明页。
+   所以各自把去向写在悬停里——一个没有文字标签的图形、一行看起来像品牌名的字，
+   光靠变色说不清点下去会去哪。（项目说明页在站内没有别的入口。） */
+.nav-brand { display: flex; align-items: center; gap: 0.6rem; }
+.nav-brand a { position: relative; display: flex; align-items: center; text-decoration: none; }
 .nav-brand img { width: 1.5rem; height: 1.5rem; border-radius: 5px; }
-.nav-brand span { font-size: 0.9rem; letter-spacing: 0.03em; }
-
-/* logo 有双重身份：既是全站入口，也是「这个项目是什么」的入口。
-   一个没有文字标签的图形，靠悬停变色说不清它通向哪里——把那个问题直接浮出来。
-   （此前项目说明页在站里没有任何入口，只能靠知道 URL。） */
-.nav-brand { position: relative; }
-.nav-brand .brand-name { transition: color 0.22s var(--ease); }
-.nav-brand:hover .brand-name, .nav-brand:focus-visible .brand-name { color: var(--light); }
+.nav-brand .brand-name {
+  font-size: 0.9rem; letter-spacing: 0.03em; color: inherit;
+  transition: color 0.22s var(--ease);
+}
+/* 注意：专栏名这个 <a> 自己就带 .brand-name，所以这里只能用伪类，不能写后代选择器 */
+.nav-brand a:hover, .nav-brand a:focus-visible { color: var(--light); }
 .nav-brand .nav-tip {
   position: absolute; inset-block-start: calc(100% + 0.5rem); inset-inline-start: 0;
   white-space: nowrap; pointer-events: none;
@@ -145,7 +147,7 @@ table { max-inline-size: 100%; }
   opacity: 0; transform: translateY(-0.3rem);
   transition: opacity 0.24s var(--ease), transform 0.24s var(--ease);
 }
-.nav-brand:hover .nav-tip, .nav-brand:focus-visible .nav-tip { opacity: 1; transform: none; }
+.nav-brand a:hover .nav-tip, .nav-brand a:focus-visible .nav-tip { opacity: 1; transform: none; }
 .nav-links a {
   font-size: var(--fs-meta); color: var(--text-dim); text-decoration: none;
   letter-spacing: 0.04em; transition: color 0.2s var(--ease);

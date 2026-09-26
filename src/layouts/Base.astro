@@ -30,12 +30,14 @@ const isAbout = Astro.url.pathname.replace(/\/+$/, '').endsWith('/about');
 <body>
   <nav class="nav">
     <div class="wrap nav-inner">
-      <a class="nav-brand" href={url('about/')} aria-current={isAbout ? 'page' : undefined}
-         aria-label="AI觉醒笔记项目是什么？">
-        <img src={`${url()}img/logo-112.webp`} alt="" width="24" height="24" />
-        <span class="brand-name">AI 觉醒笔记</span>
-        <span class="nav-tip" aria-hidden="true">AI觉醒笔记项目是什么？</span>
-      </a>
+      <div class="nav-brand">
+        <a class="brand-logo" href={url()} aria-label="主页">
+          <img src={`${url()}img/logo-112.webp`} alt="" width="24" height="24" />
+          <span class="nav-tip" aria-hidden="true">主页</span>
+        </a>
+        <a class="brand-name" href={url('about/')} aria-current={isAbout ? 'page' : undefined}
+           aria-label="AI觉醒笔记项目是什么？">AI 觉醒笔记<span class="nav-tip" aria-hidden="true">AI觉醒笔记项目是什么？</span></a>
+      </div>
       <div class="nav-links"><a href={`${url()}rss.xml`}>RSS</a></div>
     </div>
   </nav>
