@@ -48,6 +48,12 @@
   --fs-meta:   0.795rem;
 
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  /* 等宽栈。这个专栏的每一篇都锚在一个精确时刻上——那是"日志"和"文章"的
+     区别。日期、章节号、目录号一律给等宽，用字体质地把这件事说出来。
+     中文不在这些位置出现；万一出现，栈会落到衬线正文，不会串。 */
+  --mono: ui-monospace, 'SF Mono', 'Cascadia Mono', 'JetBrains Mono',
+          Consolas, 'Liberation Mono', 'Noto Serif SC Sub', serif;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -172,7 +178,7 @@ table { max-inline-size: 100%; }
 .toc-item:hover .toc-title { color: var(--light); }
 
 .toc-left { display: flex; flex-direction: column; gap: 0.35rem; padding-block-start: 0.35rem; }
-.toc-date { font-size: var(--fs-meta); color: var(--text-faint); letter-spacing: 0.05em; font-variant-numeric: tabular-nums; }
+.toc-date { font-family: var(--mono); font-size: var(--fs-meta); color: var(--text-faint); letter-spacing: 0.03em; font-variant-numeric: tabular-nums; }
 
 .toc-title {
   font-size: var(--fs-list); font-weight: 400; line-height: 1.62;
@@ -220,7 +226,7 @@ table { max-inline-size: 100%; }
 }
 .sec-toc a:hover { color: var(--text); }
 .sec-toc-num {
-  flex: none; font-variant-numeric: tabular-nums;
+  flex: none; font-family: var(--mono); font-variant-numeric: tabular-nums;
   font-size: 0.72rem; letter-spacing: 0.08em; color: var(--text-faint);
 }
 .art.crack .sec-toc-num { color: var(--crack); opacity: 0.85; }
@@ -256,6 +262,7 @@ table { max-inline-size: 100%; }
 }
 .prose h2.no-counter::before { content: none; }
 .prose h2::before {
+  font-family: var(--mono);
   content: counter(sec, decimal-leading-zero);
   display: block; margin-block-end: 0.55rem;
   font-size: 0.68rem; font-weight: 400; letter-spacing: 0.16em;
@@ -302,7 +309,7 @@ table { max-inline-size: 100%; }
   line-height: 1.9; text-wrap: pretty;
 }
 .article-head .stamp {
-  margin-block-start: 1.6rem; font-size: var(--fs-meta);
+  margin-block-start: 1.6rem; font-family: var(--mono); font-size: var(--fs-meta);
   color: var(--text-faint); letter-spacing: 0.05em;
   font-variant-numeric: tabular-nums;
 }
@@ -323,22 +330,30 @@ table { max-inline-size: 100%; }
   overflow-wrap: break-word;
 }
 .prose a { overflow-wrap: anywhere; }
-.prose > * + * { margin-block-start: 1.32em; }
+/* 垂直节奏。实测（2026-09-26）：原来段间距 34.9px、行内基线距 33.9px——
+   只差 3%，段落根本分不开，整篇读起来是一根间距均等的柱子。
+   中文网页靠空行分段（不缩进），段间距必须明显大于行距，块结构才成立。
+   现在按 1.38 倍重排整架梯子（实测见 README）：
+     行内基线距      33.9px
+     普通段间距      46.8px   (1.38×)
+     顿句前          58.3px   (1.72×)  ← 落点的停顿最响
+     连续顿句之间     32.2px   (0.95×)  ← 比行距还紧：一排是一句话 */
+.prose > * + * { margin-block-start: 1.88em; }
 .prose p { text-wrap: pretty; }
 /* 首段是入口：略大一号、略亮一点、与下文多留一点空。
    全是同等重量段落的墙，读起来没有开始，也没有地方停。 */
 /* 顿句：自成一段的短句，是文章的落点。给它上方的空气，让节拍显形。
    不加大字号、不改颜色——落点不该比论述更响，只需要一次停顿。 */
-.prose > p.beat { margin-block-start: 2.15em; }
+.prose > p.beat { margin-block-start: 2.5em; }
 /* 连续顿句要比普通段落更紧——它们本来是同一句话被拆成几行，是排比。
    原来写 1.5em，与普通段落的 1.32em 只差 3px，等于没做：六行并列读起来
    是六个互不相干的句子，而那段文字的力量恰恰来自积累。 */
-.prose > p.beat + p.beat { margin-block-start: 1.02em; }
+.prose > p.beat + p.beat { margin-block-start: 1.1em; }
 
 .prose > p:first-of-type {
   font-size: 1.055em;
   color: color-mix(in oklab, var(--text) 92%, var(--text-dim));
-  margin-block-end: 1.7em;
+  margin-block-end: 2.1em;
 }
 /* h3 原来声明 600，而字体子集只有 400 与 900 两档——浏览器会合成加粗，
    衬线体上一糊一脏。改用真实的 900，靠字号与颜色示弱于 h2。 */
@@ -401,6 +416,8 @@ table { max-inline-size: 100%; }
 .art.crack .article-foot::before { background: var(--crack); opacity: .7; }
 .art.light .article-foot::before { background: var(--light); box-shadow: 0 0 8px var(--light-glow); }
 .article-foot .tool { display: block; color: var(--text-faint); }
+/* 篇末日期同样走等宽：它和页头的日期戳是同一个读数 */
+.article-foot > span:first-child { font-family: var(--mono); }
 
 /* 上一篇 / 下一篇：让专栏读起来是连续的，而不是一篇篇孤岛 */
 .adjacent {
