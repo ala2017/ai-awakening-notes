@@ -10,6 +10,7 @@
  * 失败时以非零码退出，可以直接挂进 CI 或发布脚本。
  */
 import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { join, extname, basename, dirname } from 'node:path';
 
 const OUT = process.argv[2] ?? 'docs';  // 可传目录，便于把 bug 注入副本反证闸门
@@ -211,6 +212,67 @@ let nulBad = 0;
   }
 })('.');
 if (!nulBad) ok('文本文件全部干净，无 NUL 污染');
+
+console.log('\n── 12. 字体子集的覆盖 ───────────────────────');
+/* 2026-09-26：新增项目说明页时，标题里 16 个字掉到备用字体，而所有检查全绿。
+   成因是 build-fonts.py 的取字口径只扫 articles/*.md 的标题行，.astro 页面没进过；
+   更阴的是表格里那些英文层级名在源码里写作 {name}，正则永远看不到真实值。
+
+   为什么必须在这里查、不能在建字体时查：建字体跑在 astro build 之前，那一刻
+   产物还不存在；唯一能回答"到底渲染了什么字"的只有构建产物。而"这个字在不在
+   字体里"只能问字体文件本身——node 解不了 woff2，所以借构建本来就要用的
+   python3 + fontTools 读一次真实 cmap。读不到就显式 SKIP，绝不静默通过。
+
+   判据分两层：
+     · 900 字重（h1-h3 与 strong）用到的字，必须在 head-900 里——缺了会掉到
+       备用字体，而 font-synthesis:none 禁掉假粗，标题会一块一块地变细。
+     · 页面上的全部文字，必须在 head-900 ∪ body-400 里。
+   范围只算 CJK 表意区（U+2E80-9FFF）与可打印 ASCII，与 build-fonts 的 codes()
+   一致：**标点不在子集里是全站的既有取舍**，不在这里报。两者要一起改。 */
+const FONT_PY = `
+import sys, json
+from fontTools.ttLib import TTFont
+out = {}
+for p in sys.argv[1:]:
+    out[p] = sorted(TTFont(p).getBestCmap().keys())
+json.dump(out, sys.stdout)
+`;
+const HEAD_FONT = join(OUT, 'fonts', 'head-900.woff2');
+const BODY_FONT = join(OUT, 'fonts', 'body-400.woff2');
+let cmaps = null;
+if (!existsSync(HEAD_FONT) || !existsSync(BODY_FONT)) {
+  soft('找不到字体产物，跳过覆盖检查');
+} else {
+  try {
+    const raw = execFileSync('python3', ['-c', FONT_PY, HEAD_FONT, BODY_FONT],
+                             { encoding: 'utf8', maxBuffer: 1 << 28, stdio: ['ignore', 'pipe', 'pipe'] });
+    cmaps = JSON.parse(raw);
+  } catch (e) {
+    soft(`读不到字体 cmap（需要 python3 + fontTools），跳过覆盖检查 —— 这不是通过`);
+  }
+}
+if (cmaps) {
+  const headSet = new Set(cmaps[HEAD_FONT]);
+  const bodySet = new Set(cmaps[BODY_FONT]);
+  const decode = (s) => s.replace(/<[^>]+>/g, '')
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'").replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ');
+  // 与 build-fonts.py 的 codes() 保持同一范围
+  const inScope = (cp) => (cp >= 0x2E80 && cp <= 0x9FFF) || (cp >= 0x20 && cp < 0x7F);
+  const need900 = new Set(), need400 = new Set();
+  for (const f of htmls) {
+    const t = readFileSync(f, 'utf8');
+    for (const m of t.matchAll(/<(h1|h2|h3|strong)\b[^>]*>([\s\S]*?)<\/\1>/gi))
+      for (const ch of decode(m[2])) if (inScope(ch.codePointAt(0))) need900.add(ch);
+    for (const ch of decode(t)) if (inScope(ch.codePointAt(0))) need400.add(ch);
+  }
+  const miss900 = [...need900].filter((c) => !headSet.has(c.codePointAt(0)));
+  const miss400 = [...need400].filter((c) => !headSet.has(c.codePointAt(0)) && !bodySet.has(c.codePointAt(0)));
+  if (miss900.length) bad(`900 字重缺字 ${miss900.length} 个（会掉到备用字体）：${miss900.join('')}`);
+  else ok(`900 字重 ${need900.size} 字全部覆盖（h1-h3 与 strong）`);
+  if (miss400.length) bad(`正文缺字 ${miss400.length} 个：${miss400.join('')}`);
+  else ok(`正文 ${need400.size} 字全部覆盖`);
+}
 
 console.log('\n── 5. 资源体积 ──────────────────────────────');
 const total = files.reduce((s, f) => s + statSync(f).size, 0);
