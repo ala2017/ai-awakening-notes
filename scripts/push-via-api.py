@@ -50,6 +50,9 @@ def api(method, path, data=None):
         raise SystemExit('❌ %s %s -> %d %s' % (method, path, e.code, e.read().decode()[:300]))
 
 
+if sh('status', '--porcelain'):
+    raise SystemExit('❌ 工作区有未提交改动，先提交再推送：\n' + sh('status', '--porcelain'))
+
 TOKEN, REPO = token_repo()
 LOCAL = sh('rev-parse', 'HEAD')
 
@@ -89,7 +92,10 @@ if DRY:
 # 逐个建 blob
 tree_items = []
 for i, path in enumerate(entries, 1):
-    data = open(path, 'rb').read()
+    # 从提交对象里取内容，不从工作区取：工作区若脏，推上去的东西
+    # 会和提交记录的树不一致（这个坑在本次真实发生过一次）
+    data = subprocess.run(['git', 'cat-file', 'blob', 'HEAD:%s' % path],
+                          capture_output=True).stdout
     blob = api('POST', '/repos/%s/git/blobs' % REPO,
                {'content': base64.b64encode(data).decode(), 'encoding': 'base64'})
     mode = sh('ls-files', '-s', '--', path).split()[0] if sh('ls-files', '-s', '--', path) else '100644'
