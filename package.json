@@ -13,7 +13,10 @@
     "check:layout": "node scripts/check-layout.mjs",
     "ingest": "python3 scripts/ingest.py",
     "build:only": "node scripts/prebuild.mjs && astro build && node scripts/postbuild.mjs",
-    "shots": "node scripts/shots.mjs"
+    "shots": "node scripts/shots.mjs",
+    "publish": "node scripts/publish.mjs",
+    "postinstall": "node scripts/install-hooks.mjs",
+    "hooks": "node scripts/install-hooks.mjs"
   },
   "devDependencies": {
     "@astrojs/markdown-remark": "^7.3.1",

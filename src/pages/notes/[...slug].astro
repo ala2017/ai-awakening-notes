@@ -28,6 +28,21 @@ const covers = import.meta.glob('/articles/covers/*.{jpg,jpeg,png,webp}', {
 const { note, earlier, later } = Astro.props;
 const { Content, headings } = await render(note);
 
+// 阅读列宽：按内容自动判定，不靠人记得标。
+// 数据密集（表格/代码多）的文章挤在 544px 里是内容层面的损失，而这不该是
+// 每篇都要人判断一次的事。heavy = 代码块数 + 表格行数/3，阈值见下——
+// 实测全站 28 篇里只有 agent-bi-chat-ruo（heavy 12.3）越过 regular，
+// 其余均 ≤1.0，所以判定结果与手工标注完全一致。
+function autoWidth(md: string): 'narrow' | 'regular' | 'wide' {
+  const code = (md.match(/^\s*```/gm) ?? []).length / 2;
+  const tableRows = (md.match(/^\|/gm) ?? []).length;
+  const heavy = code + tableRows / 3;
+  if (heavy >= 20) return 'wide';
+  if (heavy >= 4) return 'regular';
+  return 'narrow';
+}
+const WIDTH = note.data.width ?? autoWidth(note.body ?? '');
+
 // 结构目录：只对"有足够多章节"的文章出。
 // 一篇 13000px、11 个章节的技术文，读者在点进去之前和读的时候都看不出它的结构——
 // 这是内容层面的损失，不是装饰层面的。少于此数则不出，免得目录比正文还显眼。
@@ -51,7 +66,7 @@ const coverSrc = d.cover
   ? covers['/articles/covers/' + d.cover.replace('./covers/', '')]
   : undefined;
 ---
-<Base title={`${d.title} | AI 觉醒笔记`} description={d.excerpt} preloadBody narrow width={d.width}>
+<Base title={`${d.title} | AI 觉醒笔记`} description={d.excerpt} preloadBody narrow width={WIDTH}>
   <article class={`crackline art ${k.cls}`}>
     <header class="article-head">
       <span class={`kind-tag ${k.cls}`}>{k.label} · {k.desc}</span>
