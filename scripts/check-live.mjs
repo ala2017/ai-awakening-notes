@@ -72,13 +72,27 @@ console.log(`\n核验线上（本地 ${local.length} 篇，基准 ${SITE}）`);
 
 /* ── 0. 推送上去了没有 ── */
 head('0. 线上就是刚推的那一版');
+/* 判据是**树**，不是提交 sha。
+   2026-09-28 实测：git push 走不通时 publish 会回退 push-via-api.py，而那条路是在
+   API 侧另建一个提交对象（同一棵树、不同的 author/committer 与时间戳），
+   所以远端 sha 永远不等于本地 HEAD——拿 sha 比会在一次成功的发布之后误报红。
+   真正要问的是「线上内容是不是我刚推的这份」，那就是树的相等。
+   已双向验证：树不一致时本条报红并打出两边的树；一致时绿。 */
 try {
+  const localTree = execFileSync('git', ['rev-parse', 'HEAD^{tree}'], { encoding: 'utf8' }).trim();
   const localHead = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
   const r = await fetch('https://api.github.com/repos/ala2017/ai-awakening-notes/commits/main',
     { headers: { 'user-agent': 'check-live', accept: 'application/vnd.github+json' } });
-  const remote = (await r.json()).sha;
-  if (remote === localHead) ok(`远端 main = 本地 HEAD ${localHead.slice(0, 8)}`);
-  else bad(`远端 ${String(remote).slice(0, 8)} ≠ 本地 ${localHead.slice(0, 8)}——推送可能没成功`, `remote=${remote}`);
+  const j = await r.json();
+  const remoteTree = j && j.commit && j.commit.tree && j.commit.tree.sha;
+  const remoteSha = j && j.sha;
+  if (remoteTree && remoteTree === localTree) {
+    ok(`远端内容 = 本地（树 ${localTree.slice(0, 8)}·提交 ${String(remoteSha).slice(0, 8)}` +
+       `${remoteSha === localHead ? '' : '，经 API 推送，提交对象不同属正常'}）`);
+  } else {
+    bad(`远端树 ${String(remoteTree).slice(0, 8)} ≠ 本地 ${localTree.slice(0, 8)}——推送可能没成功`,
+        `remote=${remoteSha} tree=${remoteTree} localTree=${localTree}`);
+  }
 } catch (e) { bad('拿不到远端提交，无法确认推送状态', e.message); }
 
 /* ── 1. 列表页 ── */
