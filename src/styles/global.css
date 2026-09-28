@@ -176,7 +176,11 @@ table { max-inline-size: 100%; }
 .bgm-audio { display: none; }
 
 /* ---------- 首屏：标题左对齐，做成结构 ---------- */
-.hero { padding-block: clamp(3rem, 2rem + 6vw, 6.5rem) clamp(2.5rem, 2rem + 4vw, 4.5rem); }
+/* 下方留白只留到"统计行到自己那条线"的距离。
+   原来这里是 clamp(2.5rem,…,4.5rem)（桌面 72px），可目录自带 border-block-start，
+   等于两道线夹出一块 72px 的空带——那段不是留白，是断掉的版面。
+   现在统计行落在两条线中间，成一个收口的横条。 */
+.hero { padding-block: clamp(3rem, 2rem + 6vw, 6.5rem) clamp(1.25rem, 1rem + 1vw, 1.6rem); }
 .hero h1 {
   font-size: var(--fs-hero);
   font-weight: 900;              /* 字重断裂的上端 */
