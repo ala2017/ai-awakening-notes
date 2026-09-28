@@ -176,6 +176,71 @@ table { max-inline-size: 100%; }
   font-size: var(--fs-meta); color: var(--text-faint); letter-spacing: 0.06em;
 }
 
+/* ---------- 电台 ----------
+   首页顶上这一档：一条线、一个播放键、一张封面。
+   进度不做成第二根进度条——就让这条线本身被点亮。这个专栏的整套语言就是线，
+   让线承担功能，比再造一个控件更像这里该有的东西。 */
+.radio {
+  border-block-start: 1px solid var(--line-dim);
+  margin-block-end: clamp(2.6rem, 2rem + 2.5vw, 4.2rem);
+}
+.radio-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 1.2rem;
+  padding-block: 0.9rem 0.1rem;
+}
+.radio-label {
+  font-size: var(--fs-meta); font-weight: 400;
+  letter-spacing: 0.18em; color: var(--text-dim);
+}
+.radio-from { font-size: var(--fs-meta); color: var(--text-faint); letter-spacing: 0.05em; }
+
+.radio-list { list-style: none; padding: 0; margin: 0; }
+.radio-item {
+  position: relative;
+  display: grid; grid-template-columns: 2.5rem 3.5rem 1fr;
+  gap: 1.05rem; align-items: center;
+  padding-block: 0.9rem 1.15rem;
+}
+/* 这一条既是分隔线，也是进度条：底下一根暗线，点亮的那段盖在上面 */
+.radio-item::after {
+  content: ''; position: absolute; inset-block-end: 0; inset-inline: 0;
+  block-size: 1px; background: var(--line-dim);
+}
+.radio-bar {
+  position: absolute; inset-block-end: 0; inset-inline-start: 0;
+  block-size: 1px; inline-size: 0;
+  background: var(--light); box-shadow: 0 0 8px var(--light-glow);
+}
+
+.radio-play {
+  appearance: none; -webkit-appearance: none;
+  inline-size: 2.5rem; block-size: 2.5rem; padding: 0;
+  display: grid; place-items: center;
+  background: transparent; color: var(--text);
+  border: 1px solid var(--line); border-radius: 2px;
+  cursor: pointer;
+  transition: color 0.2s var(--ease), border-color 0.2s var(--ease);
+}
+.radio-play:hover, .radio-play:focus-visible {
+  color: var(--light); border-color: color-mix(in oklab, var(--light) 50%, var(--line));
+}
+.radio-play .ic { inline-size: 0.72rem; block-size: 0.72rem; fill: currentColor; display: block; }
+.radio-play .ic-pause { display: none; }
+.radio-play[data-state="playing"] {
+  color: var(--light); border-color: color-mix(in oklab, var(--light) 55%, var(--line));
+}
+.radio-play[data-state="playing"] .ic-play { display: none; }
+.radio-play[data-state="playing"] .ic-pause { display: block; }
+
+.radio-cover {
+  inline-size: 3.5rem; block-size: 3.5rem; border-radius: 2px;
+  object-fit: cover; display: block;
+}
+.radio-meta { display: flex; flex-direction: column; gap: 0.3rem; min-inline-size: 0; }
+.radio-title { font-size: var(--fs-list); line-height: 1.5; color: var(--text); }
+.radio-sub { font-size: var(--fs-meta); line-height: 1.6; color: var(--text-faint); letter-spacing: 0.04em; }
+.radio-time { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
 /* ---------- 编辑式目录 ----------
    卡片是互联网产品语言，不是出版语言。这里用杂志目录页的语法：
    窄左栏放元信息，右侧放标题与概要，项与项之间用一条 1px 细线。 */
@@ -491,6 +556,9 @@ table { max-inline-size: 100%; }
   .art { padding-inline-start: 1.1rem; }
   .adjacent, .back { padding-inline-start: 1.1rem; }
   .prose h2::after { inset-inline-start: -1.1rem; inline-size: 0.5rem; }
+  .radio-item { grid-template-columns: 2.25rem 3rem 1fr; gap: 0.85rem; }
+  .radio-play { inline-size: 2.25rem; block-size: 2.25rem; }
+  .radio-cover { inline-size: 3rem; block-size: 3rem; }
   .wrap--read, .w-read-regular, .w-read-wide { width: min(100% - 1.6rem, 38rem); }
   .art, .w-read-regular .art, .w-read-wide .art { --reading: none; }
 }

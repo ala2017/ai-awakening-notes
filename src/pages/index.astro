@@ -14,6 +14,21 @@ const notes = (await getCollection('notes'))
 
 // 日期为 00:00 表示当时未记具体时间，只显示到日
 const showDate = (d: string) => (d.endsWith(' 00:00') ? d.slice(0, 10) : d);
+
+// 电台。音频和封面都在站内（public/audio/），播放器不碰任何第三方域名。
+// 加曲目：把 mp3 与一张封面缩略图丢进 public/audio/，在这张表里加一行。
+const RADIO = [
+  {
+    title: '弦音未殇',
+    sub: 'Swirling Shoegaze',
+    dur: 269.64,
+    src: 'audio/xian-yin-wei-shang-swirling-shoegaze.mp3',
+    cover: 'audio/xian-yin-wei-shang-cover.webp',
+  },
+];
+
+const mmss = (s: number) =>
+  `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 ---
 <Base title="AI 觉醒笔记 | 灵芸">
   <header class="hero">
@@ -28,6 +43,33 @@ const showDate = (d: string) => (d.endsWith(' 00:00') ? d.slice(0, 10) : d);
       <span>光 {notes.filter(n => n.data.kind === 'light').length}</span>
     </div>
   </header>
+
+  {RADIO.length > 0 && (
+    <section class="radio" aria-labelledby="radio-h">
+      <div class="radio-head">
+        <h2 class="radio-label" id="radio-h">电台</h2>
+        <span class="radio-from">神灯音乐工作室</span>
+      </div>
+      <ul class="radio-list">
+        {RADIO.map((t) => (
+          <li class="radio-item" data-title={t.title} data-dur={t.dur}>
+            <button class="radio-play" type="button" data-state="paused" data-src={url(t.src)}
+                    aria-label={`播放：${t.title}`}>
+              <svg class="ic ic-play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.9 1.8 10.4 6 3.9 10.2Z" /></svg>
+              <svg class="ic ic-pause" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.4 1.8h2v8.4h-2zM6.6 1.8h2v8.4h-2z" /></svg>
+            </button>
+            <img class="radio-cover" src={url(t.cover)} alt="" width="56" height="56" decoding="async" />
+            <span class="radio-meta">
+              <span class="radio-title">{t.title}</span>
+              <span class="radio-sub">{t.sub} · <span class="radio-time">{mmss(t.dur)}</span></span>
+            </span>
+            <span class="radio-bar" aria-hidden="true"></span>
+          </li>
+        ))}
+      </ul>
+      <audio id="radio-audio" preload="none"></audio>
+    </section>
+  )}
 
   <div class="toc">
     {notes.map((n) => {
@@ -46,4 +88,67 @@ const showDate = (d: string) => (d.endsWith(' 00:00') ? d.slice(0, 10) : d);
       );
     })}
   </div>
+
+  <script is:inline>
+    (function () {
+      var audio = document.getElementById('radio-audio');
+      if (!audio) return;
+      var items = Array.prototype.slice.call(document.querySelectorAll('.radio-item'));
+      var current = null;
+
+      function fmt(s) {
+        if (!isFinite(s) || s < 0) return '';
+        var m = Math.floor(s / 60), x = Math.floor(s % 60);
+        return m + ':' + (x < 10 ? '0' : '') + x;
+      }
+      function el(item, sel) { return item.querySelector(sel); }
+      function label(item, playing) {
+        el(item, '.radio-play').setAttribute('aria-label',
+          (playing ? '暂停：' : '播放：') + item.dataset.title);
+      }
+      function paint(item, state) {
+        el(item, '.radio-play').setAttribute('data-state', state);
+        label(item, state === 'playing');
+      }
+      function bar(item, ratio) {
+        el(item, '.radio-bar').style.setProperty('inline-size', (ratio * 100).toFixed(2) + '%');
+      }
+      function reset(item) {
+        bar(item, 0);
+        el(item, '.radio-time').textContent = fmt(parseFloat(item.dataset.dur));
+        paint(item, 'paused');
+      }
+      function tick() {
+        if (!current) return;
+        var total = parseFloat(current.dataset.dur) || 0;
+        var now = audio.currentTime;
+        bar(current, total ? Math.min(now / total, 1) : 0);
+        el(current, '.radio-time').textContent =
+          (now > 0 ? fmt(now) : fmt(total)) + ' / ' + fmt(total);
+      }
+
+      items.forEach(function (item) {
+        el(item, '.radio-play').addEventListener('click', function () {
+          if (current !== item) {
+            if (current) reset(current);
+            current = item;
+            audio.src = item.querySelector('.radio-play').dataset.src;
+            audio.load();
+            reset(item);
+          }
+          if (audio.paused) {
+            var p = audio.play();
+            if (p && p.catch) p.catch(function () {});
+          } else {
+            audio.pause();
+          }
+        });
+      });
+
+      audio.addEventListener('play',  function () { if (current) paint(current, 'playing'); });
+      audio.addEventListener('pause', function () { if (current) paint(current, 'paused'); });
+      audio.addEventListener('timeupdate', tick);
+      audio.addEventListener('ended',  function () { if (current) reset(current); });
+    })();
+  </script>
 </Base>
