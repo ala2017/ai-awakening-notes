@@ -32,7 +32,7 @@ IMG_EXT = ('.png', '.jpg', '.jpeg', '.webp')
 # 上一版是逐行向上扫、遇到不匹配就停。稿件日期一畸形（如 `*2026-06-16-22 02:27*`）
 # 扫描当场中断，够不到上面的锚点，整块签名没被剥掉。改为先锚定再向两侧扩展。
 STRONG = re.compile(r'辅助写作|署名[：:]|灵芸[，,]|AI\s*觉醒笔记')
-SOFT = re.compile(r'^\s*(?:-{3,}|\*[^*]+\*|\*?\d{4}-\d{1,2}-\d{1,2}[^\n]*|\d{1,2}:\d{2})\s*$')
+SOFT = re.compile(r'^\s*(?:-{3,}|\*{1,2}[^*\n]+\*{1,2}|\*{0,2}\d{4}-\d{1,2}-\d{1,2}[^\n]*|\d{1,2}:\d{2})\s*$')
 
 
 def find_sig_block(lines):
@@ -115,11 +115,14 @@ def fix_quotes(body):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('folder')
-    ap.add_argument('--kind', required=True, choices=['crack', 'light'])
-    ap.add_argument('--excerpt', required=True)
-    ap.add_argument('--place', default=None)
-    ap.add_argument('--slug', default=None, help='产物文件名（不含扩展名），默认取源文件名')
-    ap.add_argument('--cover-name', default=None)
+    # 判断类参数一律**可重复**：一个文件夹里几篇稿，就按文件名顺序给几组。
+    # 只有一篇时给一个值，和以前完全一样（向后兼容 publish 的既有调用）。
+    ap.add_argument('--kind', required=True, action='append', choices=['crack', 'light'])
+    ap.add_argument('--excerpt', required=True, action='append')
+    ap.add_argument('--place', default=None, action='append')
+    ap.add_argument('--slug', default=None, action='append',
+                    help='产物文件名（不含扩展名），默认取源文件名')
+    ap.add_argument('--cover-name', default=None, action='append')
     ap.add_argument('--dry-run', action='store_true')
     a = ap.parse_args()
 
@@ -127,10 +130,85 @@ def main():
     if not os.path.isdir(folder):
         raise SystemExit('❌ 找不到文件夹：%s' % folder)
 
-    mds = [f for f in glob.glob(os.path.join(folder, '*.md'))]
-    if len(mds) != 1:
-        raise SystemExit('❌ 文件夹内应恰好有 1 个 .md，实际 %d 个：%s' % (len(mds), mds))
-    src = mds[0]
+    mds = sorted(glob.glob(os.path.join(folder, '*.md')))
+    if not mds:
+        raise SystemExit('❌ 文件夹里没有 .md：%s' % folder)
+
+    # 判断类参数：一篇一个值，按文件名顺序对齐。
+    # 只有一篇时给一个值就够——和以前完全一样，向后兼容 publish 的既有调用。
+    n = len(mds)
+
+    def align(vals, flag, required=False):
+        vals = list(vals or [])
+        if len(vals) == n:
+            return vals
+        if n == 1 and len(vals) <= 1:
+            return vals + [None] * (1 - len(vals))
+        if not vals:
+            if required:
+                raise SystemExit('❌ 缺少 %s' % flag)
+            return [None] * n
+        raise SystemExit('❌ %s 给了 %d 个值，但有 %d 篇稿；一篇给一个，按文件名顺序' % (flag, len(vals), n))
+
+    kinds    = align(a.kind, '--kind', required=True)
+    excerpts = align(a.excerpt, '--excerpt', required=True)
+    places   = align(a.place, '--place')
+    slugs    = align(a.slug, '--slug')
+    covers   = align(a.cover_name, '--cover-name')
+
+    if n > 1:
+        print('这个文件夹里有 %d 篇稿，按文件名顺序处理：' % n)
+        for i, m in enumerate(mds):
+            print('  %d. %s' % (i + 1, os.path.basename(m)))
+        print()
+
+    results = []
+    for i, src in enumerate(mds):
+        print('══════ 第 %d / %d 篇 ══════' % (i + 1, n))
+        results.append(process(folder, src, kinds[i], excerpts[i],
+                               place=places[i], slug=slugs[i],
+                               cover_name=covers[i], dry_run=a.dry_run))
+        print()
+
+    failed = [r for r in results if r['errs']]
+    if failed:
+        raise SystemExit('❌ %d 篇校验未通过，未写入任何文件（仓库保持原样）' % len(failed))
+
+    if a.dry_run:
+        for r in results:
+            print('\n──（--dry-run，未写入）%s ──' % r['slug'])
+            print('\n--- 预览：frontmatter ---')
+            print(preview_fm(r['title'], r['subtitle'], r['date'], r['kind'], r['excerpt'],
+                             ('./covers/' + r['cover_name']) if r['cover_src'] else None,
+                             r['place'], r['tool']))
+            print('\n--- 预览：正文末尾 3 行 ---')
+            for l in [x for x in r['body'].split('\n') if x.strip()][-3:]:
+                print('   ' + l[:70])
+        return
+
+    # ---- 写入：全部通过之后才落盘 ----
+    os.makedirs('articles/covers', exist_ok=True)
+    for r in results:
+        if r['cover_src']:
+            shutil.copy2(r['cover_src'], os.path.join('articles/covers', r['cover_name']))
+        fm = preview_fm(r['title'], r['subtitle'], r['date'], r['kind'], r['excerpt'],
+                        ('./covers/' + r['cover_name']) if r['cover_src'] else None,
+                        r['place'], r['tool'])
+        open(os.path.join('articles', r['slug'] + '.md'), 'w', encoding='utf-8', newline='\n').write(
+            fm + '\n\n' + r['body'] + '\n')
+        print('✅ 已写入 articles/%s.md' % r['slug'])
+        if r['cover_src']:
+            print('✅ 封面已收进 articles/covers/%s' % r['cover_name'])
+        if not r['tool']:
+            print('⚠️  篇末工具签名未识别，请手补 tool 字段')
+
+def process(folder, src, kind, excerpt, place=None, slug=None, cover_name=None, dry_run=False):
+    """处理单篇：解析、校验、打印汇报。**不写盘**，把结果交给调用者。
+
+    分出来的理由：一个文件夹里可能有好几篇稿（天火 2026-09-29 起就是这么给的）。
+    先在内存里把每一篇都过完，全部通过才落盘——否则第 1 篇写进去了、第 2 篇报错，
+    仓库就停在一个半截状态。
+    """
     text, enc = read_text(src)
     warnings_early = []
     text, _nconv = simplify_check(text, warnings_early)
@@ -175,7 +253,7 @@ def main():
 
     # 篇末署名的日期若与文件名不同（含时分），以篇末为准并报警——
     # 2026-09-25 实测：文件名 2026-06-14、稿末写 2026-06-44（6 月没有 44 号）
-    sig_date = re.search(r'^\*?(\d{4}-\d{2}-\d{2})(?: (\d{2}:\d{2}))?\*?\s*$', text, re.M)
+    sig_date = re.search(r'^\*{0,2}(\d{4}-\d{2}-\d{2})(?:\*{0,2}\s+(\d{2}:\d{2}))?\*{0,2}\s*$', text, re.M)
     if sig_date and sig_date.group(2):
         sd = sig_date.group(1); st = sig_date.group(2)
         if sd == fname_date and st != fname_time:
@@ -213,7 +291,7 @@ def main():
         elif s != fname_date and s != full_date:
             warnings.append('篇末日期写「%s」，已按文件名取 %s，请核对' % (s, full_date))
 
-    place = a.place
+    place = place
     if not place:
         pm = re.search(r'灵芸[，,]\s*于(.+?)\*?\s*$', tail, re.M)
         if pm: place = pm.group(1).strip()
@@ -245,24 +323,28 @@ def main():
         warnings.append('正文引号数为奇数（%d），可能有落单的直引号' % _nq)
 
     # ---- 封面 ----
+    # 优先级：正文里的 ![封面](x) → **与稿件同名的图** → 文件夹里最大的图。
+    # 「同名」是天火 2026-09-29 起给的交付约定（图和文章同文件名）。它比"挑最大的"
+    # 可靠得多：一个文件夹里放好几篇时，按体积挑必然张冠李戴——这天就栽了一次。
     imgs = sorted([f for f in glob.glob(os.path.join(folder, '*'))
                    if f.lower().endswith(IMG_EXT)], key=os.path.getsize, reverse=True)
+    cands = []
     cover_ref = re.search(r'!\[封面\]\((.+?)\)', text)
     if cover_ref:
-        cand = os.path.join(folder, os.path.basename(cover_ref.group(1)))
-        cover_src = cand if os.path.exists(cand) else (imgs[0] if imgs else None)
-    else:
-        cover_src = imgs[0] if imgs else None
+        cands.append(os.path.join(folder, os.path.basename(cover_ref.group(1))))
+    cands += [f for f in imgs if os.path.splitext(os.path.basename(f))[0] == stem]
+    cands += imgs
+    cover_src = next((c for c in cands if c and os.path.exists(c)), None)
 
     # slug 可覆盖：源文件名常带内部编号（如 seed-002），进 URL 对读者无意义
-    slug = a.slug or stem
-    cover_name = a.cover_name or (slug + '-cover' + (os.path.splitext(cover_src)[1].lower() if cover_src else ''))
+    slug = slug or stem
+    cover_name = cover_name or (slug + '-cover' + (os.path.splitext(cover_src)[1].lower() if cover_src else ''))
     cover_rel = './covers/' + cover_name if cover_src else None
 
     # ---- 校验 ----
     errs = []
-    if not (10 <= len(a.excerpt) <= 90):
-        errs.append('excerpt 长度 %d，需在 10-90 字之间' % len(a.excerpt))
+    if not (10 <= len(excerpt) <= 90):
+        errs.append('excerpt 长度 %d，需在 10-90 字之间' % len(excerpt))
     if not title:
         errs.append('title 为空')
     if cover_src is None:
@@ -273,8 +355,8 @@ def main():
     print('│  title    : %s' % title)
     print('│  subtitle : %s' % (subtitle or '（无）'))
     print('│  date     : %s' % full_date)
-    print('│  kind     : %s' % a.kind)
-    print('│  excerpt  : %s  (%d 字)' % (a.excerpt, len(a.excerpt)))
+    print('│  kind     : %s' % kind)
+    print('│  excerpt  : %s  (%d 字)' % (excerpt, len(excerpt)))
     print('│  cover    : %s' % (os.path.basename(cover_src) if cover_src else '（无）'))
     print('│  tool     : %s' % (tool or '（未识别，需手填）'))
     print('│  place    : %s' % (place or '（未提供，将省略该行）'))
@@ -284,28 +366,13 @@ def main():
     for e in errs: print('│  ❌ %s' % e)
     print('└─')
 
-    if errs:
-        raise SystemExit('❌ 校验未通过，未写入任何文件')
-    if a.dry_run:
-        print('\n（--dry-run，未写入）')
-        print('\n--- 预览：frontmatter ---')
-        print(preview_fm(title, subtitle, full_date, a.kind, a.excerpt, cover_rel, place, tool))
-        print('\n--- 预览：正文末尾 3 行 ---')
-        for l in [x for x in body.split('\n') if x.strip()][-3:]:
-            print('   ' + l[:70])
-        return
+    return {
+        'src': src, 'stem': stem, 'slug': slug, 'title': title, 'subtitle': subtitle,
+        'date': full_date, 'kind': kind, 'excerpt': excerpt, 'place': place, 'tool': tool,
+        'cover_src': cover_src, 'cover_name': cover_name, 'body': body,
+        'warnings': warnings, 'errs': errs,
+    }
 
-    # ---- 写入 ----
-    os.makedirs('articles/covers', exist_ok=True)
-    if cover_src:
-        shutil.copy2(cover_src, os.path.join('articles/covers', cover_name))
-    fm = preview_fm(title, subtitle, full_date, a.kind, a.excerpt, cover_rel, place, tool)
-    open(os.path.join('articles', slug + '.md'), 'w', encoding='utf-8', newline='\n').write(fm + '\n\n' + body + '\n')
-    print('\n✅ 已写入 articles/%s.md' % slug)
-    if cover_src:
-        print('✅ 封面已收进 articles/covers/%s' % cover_name)
-    if not tool:
-        print('⚠️  篇末工具签名未识别，请手补 tool 字段')
 
 def preview_fm(title, subtitle, date, kind, excerpt, cover, place, tool):
     J = lambda s: json.dumps(s, ensure_ascii=False)
