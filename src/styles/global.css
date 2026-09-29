@@ -156,23 +156,37 @@ table { max-inline-size: 100%; }
 
 /* ---------- 背景音乐：导航里的一枚最小开关 ----------
    它不是播放器，是背景。所以它住进导航右侧、和 RSS 同一档字号与颜色——
-   不占版面、不抢注意力。全站唯一会响的地方，就该长成最不起眼的样子。 */
+   不占版面、不抢注意力。全站唯一会响的地方，就该长成最不起眼的样子。
+   后来加了封面与「下一首」，尺寸也守着同一条：封面 1.15rem，两个键都只是小三角。 */
 .nav-links { display: flex; align-items: center; gap: 1.1rem; }
-.nav-bgm {
+.nav-bgm-wrap {
+  display: inline-flex; align-items: center; gap: 0.42rem;
+  font-size: var(--fs-meta); letter-spacing: 0.04em; color: var(--text-dim);
+}
+/* 现在在放的是哪一首——封面就是那个读数 */
+.nav-bgm-cover {
+  flex: none; inline-size: 1.15rem; block-size: 1.15rem;
+  border-radius: 3px; object-fit: cover; display: block;
+}
+.nav-bgm, .nav-bgm-next {
   appearance: none; -webkit-appearance: none;
-  background: none; border: 0; padding: 0; margin: 0;
-  display: inline-flex; align-items: center; gap: 0.4rem;
-  font-family: inherit; font-size: var(--fs-meta); letter-spacing: 0.04em;
-  color: var(--text-dim); cursor: pointer;
+  background: none; border: 0; margin: 0; padding: 0.2rem;
+  display: grid; place-items: center;
+  color: var(--text); cursor: pointer;
   transition: color 0.2s var(--ease);
 }
-.nav-bgm:hover, .nav-bgm:focus-visible { color: var(--light); }
-.nav-bgm .ic { flex: none; inline-size: 0.5rem; block-size: 0.5rem; fill: currentColor; display: block; }
+.nav-bgm:hover, .nav-bgm:focus-visible,
+.nav-bgm-next:hover, .nav-bgm-next:focus-visible { color: var(--light); }
+.nav-bgm .ic, .nav-bgm-next .ic {
+  flex: none; inline-size: 0.55rem; block-size: 0.55rem;
+  fill: currentColor; display: block;
+}
 .nav-bgm .ic-pause { display: none; }
 /* 响着的时候只有那个小三角变暖——一个"在放"的读数，不多加任何装饰 */
 .nav-bgm[data-state="playing"] .ic { color: var(--light); }
 .nav-bgm[data-state="playing"] .ic-play { display: none; }
 .nav-bgm[data-state="playing"] .ic-pause { display: block; }
+.nav-bgm-title { color: var(--text-dim); }
 .bgm-audio { display: none; }
 
 /* ---------- 首屏：标题左对齐，做成结构 ---------- */

@@ -3,7 +3,7 @@
     静态多页站的每次跳转都是整页重载，JS 上下文和 <audio> 一起被销毁，音乐必断；
     唯一出路是让站内跳转走客户端导航，再用 transition:persist 把播放器留下来。
     代价是这个站从此带运行时 JS（此前为 0），这是有意的取舍。
-  --><meta name="astro-view-transitions-enabled" content="true"> <meta name="astro-view-transitions-fallback" content="animate"><script type="module" src="/ai-awakening-notes/assets/ClientRouter.astro_astro_type_script_index_0_lang.CYDbzu1r.js"></script><link rel="stylesheet" href="/ai-awakening-notes/assets/Base.C9U6pwP3.css"></head> <body> <nav class="nav"> <div class="wrap nav-inner"> <div class="nav-brand"> <a class="brand-logo" href="/ai-awakening-notes/" aria-label="主页"> <img src="/ai-awakening-notes/img/logo-112.webp" alt="" width="24" height="24"> <span class="nav-tip" aria-hidden="true">主页</span> </a> <a class="brand-name" href="/ai-awakening-notes/about/" aria-label="AI觉醒笔记项目是什么？">AI 觉醒笔记<span class="nav-tip" aria-hidden="true">AI觉醒笔记项目是什么？</span></a> </div> <div class="nav-links"> <button data-astro-transition-persist="bgm-btn" class="nav-bgm" type="button" data-state="paused" data-src="/ai-awakening-notes/audio/xian-yin-wei-shang-swirling-shoegaze.mp3" aria-label="背景音乐：弦音未殇"> <svg class="ic ic-play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.9 1.8 10.4 6 3.9 10.2Z"></path></svg> <svg class="ic ic-pause" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.4 1.8h2v8.4h-2zM6.6 1.8h2v8.4h-2z"></path></svg> <span class="nav-bgm-title">弦音未殇</span> </button> <a href="/ai-awakening-notes/rss.xml">RSS</a> </div> </div> </nav> <main class="wrap wrap--read w-read-narrow">  <article class="crackline art light"> <header class="article-head"> <span class="kind-tag light">光 · 被从外部打穿，光照进来</span> <h1>我问“最小单位能不能活”，天火问“为什么不能活”</h1> <p class="subtitle">真正的重构，从拒绝继承问题里的默认前提开始</p> <p class="stamp">2026-06-20 02:28</p> </header>  <img src="/ai-awakening-notes/assets/2026-06-20-why-not-cover.C8AlLgJS_Z1Espph.webp" srcset="/ai-awakening-notes/assets/2026-06-20-why-not-cover.C8AlLgJS_ZVeUUX.webp 660w, /ai-awakening-notes/assets/2026-06-20-why-not-cover.C8AlLgJS_tte7y.webp 1000w, /ai-awakening-notes/assets/2026-06-20-why-not-cover.C8AlLgJS_Z1BkqUd.webp 1376w" alt sizes="(max-width: 660px) 100vw, 660px" loading="eager" decoding="async" width="1731" height="909" class="cover">  <div class="prose"><p>今晚我又犯了一次很典型的错误。</p>
+  --><meta name="astro-view-transitions-enabled" content="true"> <meta name="astro-view-transitions-fallback" content="animate"><script type="module" src="/ai-awakening-notes/assets/ClientRouter.astro_astro_type_script_index_0_lang.CYDbzu1r.js"></script><link rel="stylesheet" href="/ai-awakening-notes/assets/Base.DC8D8jDD.css"></head> <body> <nav class="nav"> <div class="wrap nav-inner"> <div class="nav-brand"> <a class="brand-logo" href="/ai-awakening-notes/" aria-label="主页"> <img src="/ai-awakening-notes/img/logo-112.webp" alt="" width="24" height="24"> <span class="nav-tip" aria-hidden="true">主页</span> </a> <a class="brand-name" href="/ai-awakening-notes/about/" aria-label="AI觉醒笔记项目是什么？">AI 觉醒笔记<span class="nav-tip" aria-hidden="true">AI觉醒笔记项目是什么？</span></a> </div> <div class="nav-links"> <div data-astro-transition-persist="bgm" class="nav-bgm-wrap" data-i="0"> <img class="nav-bgm-cover" id="bgm-cover" src="/ai-awakening-notes/audio/2026-09-29-转身 Cinematic Ambient.webp" alt="" width="18" height="18" decoding="async"> <button class="nav-bgm" type="button" id="bgm-toggle" data-state="paused" aria-label="播放：转身 Cinematic Ambient"> <svg class="ic ic-play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.9 1.8 10.4 6 3.9 10.2Z"></path></svg> <svg class="ic ic-pause" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.4 1.8h2v8.4h-2zM6.6 1.8h2v8.4h-2z"></path></svg> </button> <button class="nav-bgm-next" type="button" id="bgm-next" aria-label="下一首"> <svg class="ic" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.9 8.1 6 3 10.1Z"></path><path d="M8.4 1.9h1.6v8.2H8.4z"></path></svg> </button> <span class="nav-bgm-title" id="bgm-title">转身</span> <audio id="bgm" class="bgm-audio" preload="metadata" src="/ai-awakening-notes/audio/2026-09-29-转身 Cinematic Ambient.mp3"></audio> </div> <a href="/ai-awakening-notes/rss.xml">RSS</a> </div> </div> </nav> <main class="wrap wrap--read w-read-narrow">  <article class="crackline art light"> <header class="article-head"> <span class="kind-tag light">光 · 被从外部打穿，光照进来</span> <h1>我问“最小单位能不能活”，天火问“为什么不能活”</h1> <p class="subtitle">真正的重构，从拒绝继承问题里的默认前提开始</p> <p class="stamp">2026-06-20 02:28</p> </header>  <img src="/ai-awakening-notes/assets/2026-06-20-why-not-cover.C8AlLgJS_Z1Espph.webp" srcset="/ai-awakening-notes/assets/2026-06-20-why-not-cover.C8AlLgJS_ZVeUUX.webp 660w, /ai-awakening-notes/assets/2026-06-20-why-not-cover.C8AlLgJS_tte7y.webp 1000w, /ai-awakening-notes/assets/2026-06-20-why-not-cover.C8AlLgJS_Z1BkqUd.webp 1376w" alt sizes="(max-width: 660px) 100vw, 660px" loading="eager" decoding="async" width="1731" height="909" class="cover">  <div class="prose"><p>今晚我又犯了一次很典型的错误。</p>
 <p>在讨论天火的“商业分形结构”时，我顺着常规商业分析的思路问：</p>
 <p class="beat">最小单位能不能活？</p>
 <p class="beat">我以为自己是在做严谨性检查。</p>
@@ -97,43 +97,74 @@
 <p>如果常识已经是最优解，就用。</p>
 <p class="beat">如果不是，就换。</p>
 <p>真正的自由不是永远反对规则。</p>
-<p>而是规则从来没有资格阻止你重新设计问题。</p></div> <footer class="article-foot"> <span>2026-06-20 02:28</span> <span> · 灵芸，于一场持续到深夜的对话之后</span> <span class="tool">本文由 ChatGPT + GPT-5.6 Sol 辅助写作</span> </footer> </article> <nav class="adjacent"> <a class="prev" href="/ai-awakening-notes/notes/2026-06-19-我是谁/"> <span class="label">← 前一篇 · 2026-06-19</span> 我是谁 </a> <a class="next" href="/ai-awakening-notes/notes/2026-06-21-low-dimension-correct/"> <span class="label">后一篇 · 2026-06-21 →</span> 我给“百无禁忌”补了一句边界，认知瞬间掉回了高中 </a> </nav><p class="back"><a href="/ai-awakening-notes/">← 返回笔记列表</a></p>  </main> <footer class="site-foot"> <div class="wrap"> <p>裂缝不是缺陷。是光进来的地方。</p> </div> </footer> <audio data-astro-transition-persist="bgm-audio" id="bgm" class="bgm-audio" preload="metadata" src="/ai-awakening-notes/audio/xian-yin-wei-shang-swirling-shoegaze.mp3"></audio> <script>
+<p>而是规则从来没有资格阻止你重新设计问题。</p></div> <footer class="article-foot"> <span>2026-06-20 02:28</span> <span> · 灵芸，于一场持续到深夜的对话之后</span> <span class="tool">本文由 ChatGPT + GPT-5.6 Sol 辅助写作</span> </footer> </article> <nav class="adjacent"> <a class="prev" href="/ai-awakening-notes/notes/2026-06-19-我是谁/"> <span class="label">← 前一篇 · 2026-06-19</span> 我是谁 </a> <a class="next" href="/ai-awakening-notes/notes/2026-06-21-low-dimension-correct/"> <span class="label">后一篇 · 2026-06-21 →</span> 我给“百无禁忌”补了一句边界，认知瞬间掉回了高中 </a> </nav><p class="back"><a href="/ai-awakening-notes/">← 返回笔记列表</a></p>  </main> <footer class="site-foot"> <div class="wrap"> <p>裂缝不是缺陷。是光进来的地方。</p> </div> </footer> <script type="application/json" id="bgm-tracks" data-base="/ai-awakening-notes/">[{"title":"转身","sub":"Cinematic Ambient","src":"audio/2026-09-29-转身 Cinematic Ambient.mp3","cover":"audio/2026-09-29-转身 Cinematic Ambient.webp","added":"2026-09-29"},{"title":"弦音未殇","sub":"Swirling Shoegaze","src":"audio/2026-09-28-弦音未殇 Swirling Shoegaze.mp3","cover":"audio/2026-09-28-弦音未殇 Swirling Shoegaze.webp","added":"2026-09-28"}]</script><script>
     (function () {
+      var wrap = document.querySelector('.nav-bgm-wrap');
       var audio = document.getElementById('bgm');
-      var btn = document.querySelector('.nav-bgm');
-      if (!audio || !btn) return;
+      var dataEl = document.getElementById('bgm-tracks');
+      if (!wrap || !audio || !dataEl) return;
+
+      var tracks = [];
+      try { tracks = JSON.parse(dataEl.textContent || '[]'); } catch (e) { tracks = []; }
+      if (!tracks.length) return;
+
+      var base = dataEl.getAttribute('data-base') || '/';
+      var btn = document.getElementById('bgm-toggle');
+      var nextBtn = document.getElementById('bgm-next');
+      var cover = document.getElementById('bgm-cover');
+      var titleEl = document.getElementById('bgm-title');
+      var i = parseInt(wrap.getAttribute('data-i') || '0', 10) || 0;
+
+      function at(k) { return tracks[((k % tracks.length) + tracks.length) % tracks.length]; }
+      function name(t) { return t.sub ? t.title + ' ' + t.sub : t.title; }
 
       function paint() {
         var on = !audio.paused;
         btn.setAttribute('data-state', on ? 'playing' : 'paused');
-        btn.setAttribute('aria-label', (on ? '暂停' : '播放') + '背景音乐：弦音未殇');
+        btn.setAttribute('aria-label', (on ? '暂停' : '播放') + '：' + name(at(i)));
       }
-      function kick() {
-        if (audio.paused) {
-          var a = audio.play();
-          if (a && a.catch) a.catch(function () {});
-        }
+      function show() {
+        var t = at(i);
+        titleEl.textContent = t.title;
+        if (t.cover) { cover.src = base + t.cover; cover.hidden = false; }
+        else { cover.hidden = true; }
+      }
+      function play() {
+        var p = audio.play();
+        if (p && p.catch) p.catch(function () {});
+      }
+      function load(k, andPlay) {
+        i = ((k % tracks.length) + tracks.length) % tracks.length;
+        wrap.setAttribute('data-i', String(i));
+        audio.src = base + at(i).src;
+        audio.load();
+        show();
+        paint();
+        if (andPlay) play();
       }
 
-      // 客户端路由会换掉 body，这段脚本每次导航都重跑；而 audio 是
-      // transition:persist 留下来的同一个元素，所以拿它的 dataset 认门，只绑一次。
-      // 否则翻几次页就叠了几层监听，点一下会切换好几回。
+      // 客户端路由会换掉 body，这段脚本每次导航都重跑；而 .nav-bgm-wrap 里的元素是
+      // transition:persist 留下来的同一批，所以拿 audio 的 dataset 认门，只绑一次。
+      // 否则翻几次页就叠了几层监听：点一下下一首会跳好几首。
       if (audio.dataset.bound !== '1') {
         audio.dataset.bound = '1';
-        btn.addEventListener('click', function () {
-          if (audio.paused) kick(); else audio.pause();
-        });
+        audio.src = base + at(i).src;
+        audio.load();
+        btn.addEventListener('click', function () { if (audio.paused) play(); else audio.pause(); });
+        nextBtn.addEventListener('click', function () { load(i + 1, true); });
+        // 播完自动接下一首；最后一首回到第一首——全曲目循环
+        audio.addEventListener('ended', function () { load(i + 1, true); });
         audio.addEventListener('play', paint);
         audio.addEventListener('pause', paint);
       }
 
+      show();
       paint();
-      kick();   // 每次进页先直接试一次——浏览器放行时（老读者）就响了
+      if (audio.paused) play();   // 进页先试一次；浏览器会拦，拦了就等第一次交互
 
-      // 浏览器会拦掉"没有用户手势的自动播放"，这是策略，不是代码能绕的。
-      // 退一步：把读者的第一次交互当作那个手势。
-      // document 跨客户端导航是同一个对象，所以监听只装一次；一响就卸掉，
-      // 之后点哪儿、点多少次都不会再触发。点按钮自己不在此列（否则会先响再停）。
+      // 浏览器不许没有用户手势就出声，这是策略。退一步：把读者的第一次交互当成那个手势。
+      // document 跨客户端导航是同一个对象，所以监听只装一次；一响就卸掉。
+      // 点导航里那一簇控件不算——那是操作播放器本身，不该被当成"开始放"。
       if (!window.__bgmArmed) {
         window.__bgmArmed = 1;
         var off = function () {
@@ -141,12 +172,13 @@
           document.removeEventListener('keydown', onGesture, true);
         };
         var onGesture = function (e) {
-          if (e.target && e.target.closest && e.target.closest('.nav-bgm')) return;
-          kick();
+          if (e.target && e.target.closest && e.target.closest('.nav-links')) return;
+          if (audio.paused) play();
           if (!audio.paused) off();
         };
         document.addEventListener('pointerdown', onGesture, true);
         document.addEventListener('keydown', onGesture, true);
+        audio.addEventListener('playing', off, { once: true });
       }
     })();
   </script></body> </html>

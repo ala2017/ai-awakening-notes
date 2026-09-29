@@ -52,6 +52,14 @@ def collect():
     for p in glob.glob('src/**/*.astro', recursive=True) + glob.glob('src/**/*.ts', recursive=True):
         body.update(open(p, encoding='utf-8').read())
 
+    # 曲库清单也要进正文层。导航里「现在在放」的曲名是从 public/audio/tracks.json 读的，
+    # 它不在任何 .astro/.md 源码里——漏掉这一处，曲名就会静默掉到备用字体，
+    # 而 font-synthesis:none 禁掉假粗之后，那几个字会明显比其他字细（双色）。
+    # 2026-09-29：加「转身」那首时正是这个情形。
+    TRACKS_JSON = 'public/audio/tracks.json'
+    if os.path.exists(TRACKS_JSON):
+        body.update(open(TRACKS_JSON, encoding='utf-8').read())
+
     # 900 字重的取字口径，必须等于「实际会以 900 渲染的文字」，否则缺字会静默掉到
     # 备用字体，而 font-synthesis:none 又禁掉了假粗——标题会一块一块地变细。
     # 原来 head 只扫 articles/*.md 的标题行，页面侧（.astro）完全没进：

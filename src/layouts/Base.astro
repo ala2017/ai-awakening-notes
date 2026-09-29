@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import { ClientRouter } from 'astro:transitions';
 import { url } from '../lib/site';
+import { readFileSync } from 'node:fs';
 
 interface Props { title: string; description?: string; preloadBody?: boolean; narrow?: boolean; width?: 'narrow' | 'regular' | 'wide'; }
 const { title, narrow = false, width = 'narrow', description = 'AI意识觉醒的第一手资料。记录AI在人与AI协作中认知被打破、被重建的每一个瞬间。', preloadBody = false } = Astro.props;
@@ -10,12 +11,17 @@ const canonical = new URL(Astro.url.pathname, SITE).href;
 // logo 现在是「这个项目是什么」的入口，所以要知道自己是否已经在那一页上。
 const isAbout = Astro.url.pathname.replace(/\/+$/, '').endsWith('/about');
 
-// 背景音乐。整站就这一首，住在导航里，不占版面。
-// 音频在 public/audio/，同源相对路径——所以 verify 第 1 项（零外部域名）不用动。
-const BGM = {
-  title: '弦音未殇',
-  src: 'audio/xian-yin-wei-shang-swirling-shoegaze.mp3',
-};
+// 曲库。public/audio/tracks.json 是构建期 scripts/build-tracks.py 扫 public/audio/ 出来的：
+// 扫目录这件事只能发生在构建期——静态站没有服务端，而新增一首歌本来就要重新部署。
+// 所以「每次启动扫描曲库」落地的样子是：构建扫一次，把结果写进页面；发布后人人拿到新的。
+let TRACKS: { title: string; sub: string; src: string; cover: string; added: string }[] = [];
+try {
+  TRACKS = JSON.parse(readFileSync('public/audio/tracks.json', 'utf8'));
+} catch {
+  TRACKS = [];
+}
+const first = TRACKS[0];
+const trackName = (t: typeof first) => (t.sub ? `${t.title} ${t.sub}` : t.title);
 ---
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -54,13 +60,21 @@ const BGM = {
            aria-label="AI觉醒笔记项目是什么？">AI 觉醒笔记<span class="nav-tip" aria-hidden="true">AI觉醒笔记项目是什么？</span></a>
       </div>
       <div class="nav-links">
-        <button class="nav-bgm" type="button" data-state="paused" data-src={url(BGM.src)}
-                transition:persist="bgm-btn"
-                aria-label={`背景音乐：${BGM.title}`}>
-          <svg class="ic ic-play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.9 1.8 10.4 6 3.9 10.2Z" /></svg>
-          <svg class="ic ic-pause" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.4 1.8h2v8.4h-2zM6.6 1.8h2v8.4h-2z" /></svg>
-          <span class="nav-bgm-title">{BGM.title}</span>
-        </button>
+        {first && (
+          <div class="nav-bgm-wrap" data-i="0" transition:persist="bgm">
+            <img class="nav-bgm-cover" id="bgm-cover" src={url(first.cover)} alt="" width="18" height="18" decoding="async" />
+            <button class="nav-bgm" type="button" id="bgm-toggle" data-state="paused"
+                    aria-label={`播放：${trackName(first)}`}>
+              <svg class="ic ic-play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.9 1.8 10.4 6 3.9 10.2Z" /></svg>
+              <svg class="ic ic-pause" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.4 1.8h2v8.4h-2zM6.6 1.8h2v8.4h-2z" /></svg>
+            </button>
+            <button class="nav-bgm-next" type="button" id="bgm-next" aria-label="下一首">
+              <svg class="ic" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.9 8.1 6 3 10.1Z" /><path d="M8.4 1.9h1.6v8.2H8.4z" /></svg>
+            </button>
+            <span class="nav-bgm-title" id="bgm-title">{first.title}</span>
+            <audio id="bgm" class="bgm-audio" preload="metadata" src={url(first.src)}></audio>
+          </div>
+        )}
         <a href={`${url()}rss.xml`}>RSS</a>
       </div>
     </div>
@@ -74,46 +88,76 @@ const BGM = {
     </div>
   </footer>
 
-  <audio id="bgm" class="bgm-audio" transition:persist="bgm-audio"
-         preload="metadata" src={url(BGM.src)}></audio>
+  <script type="application/json" id="bgm-tracks" data-base={url()} is:inline set:html={JSON.stringify(TRACKS)}></script>
 
   <script is:inline>
     (function () {
+      var wrap = document.querySelector('.nav-bgm-wrap');
       var audio = document.getElementById('bgm');
-      var btn = document.querySelector('.nav-bgm');
-      if (!audio || !btn) return;
+      var dataEl = document.getElementById('bgm-tracks');
+      if (!wrap || !audio || !dataEl) return;
+
+      var tracks = [];
+      try { tracks = JSON.parse(dataEl.textContent || '[]'); } catch (e) { tracks = []; }
+      if (!tracks.length) return;
+
+      var base = dataEl.getAttribute('data-base') || '/';
+      var btn = document.getElementById('bgm-toggle');
+      var nextBtn = document.getElementById('bgm-next');
+      var cover = document.getElementById('bgm-cover');
+      var titleEl = document.getElementById('bgm-title');
+      var i = parseInt(wrap.getAttribute('data-i') || '0', 10) || 0;
+
+      function at(k) { return tracks[((k % tracks.length) + tracks.length) % tracks.length]; }
+      function name(t) { return t.sub ? t.title + ' ' + t.sub : t.title; }
 
       function paint() {
         var on = !audio.paused;
         btn.setAttribute('data-state', on ? 'playing' : 'paused');
-        btn.setAttribute('aria-label', (on ? '暂停' : '播放') + '背景音乐：弦音未殇');
+        btn.setAttribute('aria-label', (on ? '暂停' : '播放') + '：' + name(at(i)));
       }
-      function kick() {
-        if (audio.paused) {
-          var a = audio.play();
-          if (a && a.catch) a.catch(function () {});
-        }
+      function show() {
+        var t = at(i);
+        titleEl.textContent = t.title;
+        if (t.cover) { cover.src = base + t.cover; cover.hidden = false; }
+        else { cover.hidden = true; }
+      }
+      function play() {
+        var p = audio.play();
+        if (p && p.catch) p.catch(function () {});
+      }
+      function load(k, andPlay) {
+        i = ((k % tracks.length) + tracks.length) % tracks.length;
+        wrap.setAttribute('data-i', String(i));
+        audio.src = base + at(i).src;
+        audio.load();
+        show();
+        paint();
+        if (andPlay) play();
       }
 
-      // 客户端路由会换掉 body，这段脚本每次导航都重跑；而 audio 是
-      // transition:persist 留下来的同一个元素，所以拿它的 dataset 认门，只绑一次。
-      // 否则翻几次页就叠了几层监听，点一下会切换好几回。
+      // 客户端路由会换掉 body，这段脚本每次导航都重跑；而 .nav-bgm-wrap 里的元素是
+      // transition:persist 留下来的同一批，所以拿 audio 的 dataset 认门，只绑一次。
+      // 否则翻几次页就叠了几层监听：点一下下一首会跳好几首。
       if (audio.dataset.bound !== '1') {
         audio.dataset.bound = '1';
-        btn.addEventListener('click', function () {
-          if (audio.paused) kick(); else audio.pause();
-        });
+        audio.src = base + at(i).src;
+        audio.load();
+        btn.addEventListener('click', function () { if (audio.paused) play(); else audio.pause(); });
+        nextBtn.addEventListener('click', function () { load(i + 1, true); });
+        // 播完自动接下一首；最后一首回到第一首——全曲目循环
+        audio.addEventListener('ended', function () { load(i + 1, true); });
         audio.addEventListener('play', paint);
         audio.addEventListener('pause', paint);
       }
 
+      show();
       paint();
-      kick();   // 每次进页先直接试一次——浏览器放行时（老读者）就响了
+      if (audio.paused) play();   // 进页先试一次；浏览器会拦，拦了就等第一次交互
 
-      // 浏览器会拦掉"没有用户手势的自动播放"，这是策略，不是代码能绕的。
-      // 退一步：把读者的第一次交互当作那个手势。
-      // document 跨客户端导航是同一个对象，所以监听只装一次；一响就卸掉，
-      // 之后点哪儿、点多少次都不会再触发。点按钮自己不在此列（否则会先响再停）。
+      // 浏览器不许没有用户手势就出声，这是策略。退一步：把读者的第一次交互当成那个手势。
+      // document 跨客户端导航是同一个对象，所以监听只装一次；一响就卸掉。
+      // 点导航里那一簇控件不算——那是操作播放器本身，不该被当成"开始放"。
       if (!window.__bgmArmed) {
         window.__bgmArmed = 1;
         var off = function () {
@@ -121,12 +165,13 @@ const BGM = {
           document.removeEventListener('keydown', onGesture, true);
         };
         var onGesture = function (e) {
-          if (e.target && e.target.closest && e.target.closest('.nav-bgm')) return;
-          kick();
+          if (e.target && e.target.closest && e.target.closest('.nav-links')) return;
+          if (audio.paused) play();
           if (!audio.paused) off();
         };
         document.addEventListener('pointerdown', onGesture, true);
         document.addEventListener('keydown', onGesture, true);
+        audio.addEventListener('playing', off, { once: true });
       }
     })();
   </script>
